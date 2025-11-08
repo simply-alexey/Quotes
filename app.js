@@ -161,6 +161,10 @@ const Categories = ['Poems','Quotes'];
 function route() {
   const hash = location.hash || '#/home';
   const [ , first, second, third ] = hash.split('/'); // e.g. #/author/Poems or #/pieces/authorId
+
+  // toggle body class for home-only styling
+  document.body.classList.toggle('home', first === 'home');
+
   if (first === 'home') renderHome();
   else if (first === 'authors') renderAuthors(decodeURIComponent(second||'Poems'));
   else if (first === 'pieces') renderPieces(Number(second));
@@ -170,13 +174,9 @@ function route() {
 
 function renderHome() {
   app.innerHTML = `
-    <div class="card group">
-      <h2>Categories</h2>
-      <div class="list">
-        ${Categories.map(c=>`<button class="btn" onclick="goto('#/authors/${encodeURIComponent(c)}')">${c}</button>`).join('')}
-      </div>
+    <div class="home-categories">
+      ${Categories.map(c=>`<button class="btn" onclick="goto('#/authors/${encodeURIComponent(c)}')">${c}</button>`).join('')}
     </div>
-    <div class="card small muted">Tip: Add authors inside a category, then add texts for each author. Everything is saved offline on your device.</div>
   `;
 }
 
