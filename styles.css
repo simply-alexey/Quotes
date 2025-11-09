@@ -44,7 +44,7 @@ main#app{padding:16px 16px 88px}
   border-radius:12px;
   color:#f5f7fb;
   padding:10px 12px;
-  font-size:16px;               /* <— prevents zoom while typing */
+  font-size:16px;               /* prevents zoom while typing */
 }
 .input.light{background:#fff;border:1px solid #b7c2d0;color:#000}
 textarea{min-height:180px;resize:vertical}
@@ -124,6 +124,9 @@ h2{font-size:1rem;margin:0 0 .5rem}
   box-shadow:0 12px 28px rgba(0,0,0,.35);
 }
 .modal-title{ margin:0 0 10px; font-size:1.1rem; }
+
+/* make sure the modal actually hides when we add the class from JS */
+.modal-backdrop.hidden { display: none !important; }
 
 /* Toast */
 .toast{
