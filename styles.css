@@ -23,6 +23,9 @@ main#app{padding:16px 16px 88px}
   padding:10px 12px;
   border-radius:12px;
   font-weight:600;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 .btn.acc{background:var(--acc);border-color:#5ec875;color:#06150d}
 
@@ -94,11 +97,29 @@ h2{font-size:1rem;margin:0 0 .5rem}
   grid-template-columns: 1fr;
   padding:8px 0 4px;
 }
-.author-item{ }
-.author-btn{ font-size:1.6em; padding:11px 14px; }
+.author-item{ width:100%; }
+.author-btn{
+  display:block;
+  width:100%;                 /* equal width for all buttons */
+  min-height:64px;            /* consistent tap height */
+  font-size:1.6em;
+  padding:11px 14px;
+  text-align:center;
+}
 
-/* Inline edit block */
-.author-edit{ background:#f8f9fb; border:1px solid #d9e0ea; border-radius:12px; padding:10px; }
+/* Inline edit block (no overlap; big tap targets) */
+.author-edit{
+  display:flex;               /* stack cleanly to avoid overlap */
+  flex-direction:column;
+  gap:12px;
+  background:#f8f9fb;
+  border:1px solid #d9e0ea;
+  border-radius:12px;
+  padding:12px;
+}
+.author-edit .row.space{ margin-top:0 !important; }
+.author-edit .btn{ min-height:44px; }          /* reliable touch area */
+.author-edit .btn + .btn{ margin-left:0; }     /* gap handled by .row */
 
 /* Floating action button (+) */
 .fab{
