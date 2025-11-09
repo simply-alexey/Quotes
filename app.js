@@ -75,7 +75,6 @@ async function updateAuthor(id, updates) {
 
 async function deleteAuthor(id) {
   await openDBIfNeeded();
-  // delete pieces of this author too
   const pieces = await listPieces(id);
   await Promise.all(pieces.map(p => delPiece(p.id)));
   return new Promise((resolve, reject) => {
@@ -161,10 +160,9 @@ async function importJSON(file) {
   const text = await file.text();
   const data = JSON.parse(text);
   await openDBIfNeeded();
-  // wipe then import (simple strategy)
   await new Promise((res,rej)=>{ const t = db.transaction(['authors','pieces'],'readwrite'); t.objectStore('authors').clear(); t.objectStore('pieces').clear(); t.oncomplete=res; t.onerror=rej; });
-  await Promise.all((data.authors||[]).map(a=>new Promise((res,rej)=>{ tx('authors','readwrite').add(a).onsuccess=()=>res(); })));
-  await Promise.all((data.pieces||[]).map(p=>new Promise((res,rej)=>{ tx('pieces','readwrite').add(p).onsuccess=()=>res(); })));
+  await Promise.all((data.authors||[]).map(a=>new Promise((res)=>{ tx('authors','readwrite').add(a).onsuccess=()=>res(); })));
+  await Promise.all((data.pieces||[]).map(p=>new Promise((res)=>{ tx('pieces','readwrite').add(p).onsuccess=()=>res(); })));
 }
 
 // ---------- UI ----------
@@ -174,7 +172,6 @@ function route() {
   const hash = location.hash || '#/home';
   const [ , first, second ] = hash.split('/');
 
-  // toggle body class for home-only styling
   document.body.classList.toggle('home', first === 'home');
 
   if (first === 'home') renderHome();
@@ -193,7 +190,6 @@ function renderHome() {
 }
 
 async function renderAuthors(category) {
-  // Light page: title + grid of author buttons + FAB add
   app.innerHTML = `
     <div class="authors-page">
       <h2>${category}</h2>
@@ -202,7 +198,6 @@ async function renderAuthors(category) {
     </div>
   `;
 
-  // one-time hint toast
   if (!localStorage.getItem('pv_hint_author_edit_shown')) {
     showToast('Tip: hold an author to rename or delete', 2800);
     localStorage.setItem('pv_hint_author_edit_shown', '1');
@@ -222,22 +217,26 @@ async function renderAuthors(category) {
       </div>
     `).join('');
 
-    // attach long-press + click handlers
     cont.querySelectorAll('.author-item').forEach(item => {
       const id = Number(item.dataset.id);
       const name = item.dataset.name;
-
       const openBtn = item.querySelector('[data-role="open"]');
       addLongPress(openBtn, () => enterEdit(item, id, name), () => goto(`#/pieces/${id}`));
     });
   }
 
+  function solidTapTarget(btn, input) {
+    // Blur the input immediately on touch so taps aren't stolen by the keyboard caret
+    ['pointerdown','touchstart','mousedown'].forEach(ev => {
+      btn.addEventListener(ev, () => { if (input) input.blur(); }, { passive: true });
+    });
+  }
+
   function enterEdit(itemEl, id, currentName) {
-    // replace content with inline editor
     itemEl.innerHTML = `
       <div class="author-edit">
         <input class="input light" value="${escapeAttr(currentName)}" aria-label="Author name">
-        <div class="row space" style="margin-top:10px">
+        <div class="row space edit-actions">
           <button class="btn" data-cancel>Cancel</button>
           <div class="row" style="gap:.5rem">
             <button class="btn danger" data-delete>Delete</button>
@@ -254,16 +253,24 @@ async function renderAuthors(category) {
     input.focus();
     input.setSelectionRange(0, input.value.length);
 
-    saveBtn.addEventListener('click', async () => {
+    // Make action buttons robust to taps near the input
+    [saveBtn, cancelBtn, delBtn].forEach(b => solidTapTarget(b, input));
+
+    saveBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       const newName = input.value.trim();
       if (!newName) return;
       await updateAuthor(id, { name: newName });
       await refresh();
     });
 
-    cancelBtn.addEventListener('click', refresh);
+    cancelBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      await refresh();
+    });
 
-    delBtn.addEventListener('click', async () => {
+    delBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
       if (!confirm('Delete author and all texts?')) return;
       await deleteAuthor(id);
       await refresh();
@@ -277,7 +284,6 @@ async function renderAuthors(category) {
 
   await refresh();
 
-  // FAB directly adds (no modal)
   $('#fabAddAuthor').addEventListener('click', async () => {
     const name = (prompt('Author name') || '').trim();
     if (!name) return;
@@ -286,7 +292,7 @@ async function renderAuthors(category) {
   });
 }
 
-/** Add a long-press handler that falls back to click if press is short. */
+/** Long-press with short-tap fallback. */
 function addLongPress(el, onLongPress, onShortTap) {
   let timer = null, longFired = false;
   const threshold = 500; // ms
@@ -305,7 +311,7 @@ function addLongPress(el, onLongPress, onShortTap) {
   };
   const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
   const end = (e) => {
-    if (timer) { // short tap
+    if (timer) {
       clear();
       if (!longFired && onShortTap) onShortTap(e);
     }
@@ -430,7 +436,6 @@ function setupInstallPrompt(){
       };
     }
   });
-  // footer controls
   const homeBtn = document.getElementById('homeBtn');
   const exportBtn = document.getElementById('exportBtn');
   const importInput = document.getElementById('importInput');
