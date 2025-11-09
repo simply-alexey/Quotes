@@ -34,6 +34,8 @@ function tx(store, mode='readonly') {
   return db.transaction(store, mode).objectStore(store);
 }
 
+async function openDBIfNeeded() { if (!db) await openDB(); }
+
 async function listAuthors(category, search = '') {
   await openDBIfNeeded();
   return new Promise((resolve) => {
@@ -55,6 +57,18 @@ async function addAuthor(name, category) {
   return new Promise((resolve, reject) => {
     const req = tx('authors','readwrite').add({ name, category, createdAt: Date.now() });
     req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function updateAuthor(id, updates) {
+  await openDBIfNeeded();
+  const existing = await new Promise(res => tx('authors').get(Number(id)).onsuccess = e => res(e.target.result));
+  if (!existing) return;
+  Object.assign(existing, updates);
+  return new Promise((resolve, reject) => {
+    const req = tx('authors','readwrite').put(existing);
+    req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
   });
 }
@@ -128,8 +142,6 @@ async function delPiece(id) {
   });
 }
 
-async function openDBIfNeeded() { if (!db) await openDB(); }
-
 // ---------- Export / Import ----------
 async function exportJSON() {
   await openDBIfNeeded();
@@ -181,7 +193,7 @@ function renderHome() {
 }
 
 async function renderAuthors(category) {
-  // Plain light page (no dark card), title + grid of author buttons, and a FAB that directly adds.
+  // Light page: title + grid of author buttons + FAB add
   app.innerHTML = `
     <div class="authors-page">
       <h2>${category}</h2>
@@ -190,18 +202,82 @@ async function renderAuthors(category) {
     </div>
   `;
 
+  // one-time hint toast
+  if (!localStorage.getItem('pv_hint_author_edit_shown')) {
+    showToast('Tip: hold an author to rename or delete', 2800);
+    localStorage.setItem('pv_hint_author_edit_shown', '1');
+  }
+
   const cont = $('#authors');
 
   async function refresh() {
     const items = await listAuthors(category);
-    cont.innerHTML = items.length
-      ? items.map(a => `<button class="btn author-btn" onclick="goto('#/pieces/${a.id}')">${escapeHtml(a.name)}</button>`).join('')
-      : `<div class="muted">No authors yet.</div>`;
+    if (!items.length) {
+      cont.innerHTML = `<div class="muted">No authors yet.</div>`;
+      return;
+    }
+    cont.innerHTML = items.map(a => `
+      <div class="author-item" data-id="${a.id}" data-name="${escapeAttr(a.name)}">
+        <button class="btn author-btn" data-role="open">${escapeHtml(a.name)}</button>
+      </div>
+    `).join('');
+
+    // attach long-press + click handlers
+    cont.querySelectorAll('.author-item').forEach(item => {
+      const id = Number(item.dataset.id);
+      const name = item.dataset.name;
+
+      const openBtn = item.querySelector('[data-role="open"]');
+      addLongPress(openBtn, () => enterEdit(item, id, name), () => goto(`#/pieces/${id}`));
+    });
+  }
+
+  function enterEdit(itemEl, id, currentName) {
+    // replace content with inline editor
+    itemEl.innerHTML = `
+      <div class="author-edit">
+        <input class="input light" value="${escapeAttr(currentName)}" aria-label="Author name">
+        <div class="row space" style="margin-top:10px">
+          <button class="btn" data-cancel>Cancel</button>
+          <div class="row" style="gap:.5rem">
+            <button class="btn danger" data-delete>Delete</button>
+            <button class="btn acc" data-save>Save</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const input = itemEl.querySelector('input');
+    const saveBtn = itemEl.querySelector('[data-save]');
+    const cancelBtn = itemEl.querySelector('[data-cancel]');
+    const delBtn = itemEl.querySelector('[data-delete]');
+
+    input.focus();
+    input.setSelectionRange(0, input.value.length);
+
+    saveBtn.addEventListener('click', async () => {
+      const newName = input.value.trim();
+      if (!newName) return;
+      await updateAuthor(id, { name: newName });
+      await refresh();
+    });
+
+    cancelBtn.addEventListener('click', refresh);
+
+    delBtn.addEventListener('click', async () => {
+      if (!confirm('Delete author and all texts?')) return;
+      await deleteAuthor(id);
+      await refresh();
+    });
+
+    input.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); saveBtn.click(); }
+      if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click(); }
+    });
   }
 
   await refresh();
 
-  // FAB directly asks for a name and adds the author (no modal)
+  // FAB directly adds (no modal)
   $('#fabAddAuthor').addEventListener('click', async () => {
     const name = (prompt('Author name') || '').trim();
     if (!name) return;
@@ -209,6 +285,39 @@ async function renderAuthors(category) {
     await refresh();
   });
 }
+
+/** Add a long-press handler that falls back to click if press is short. */
+function addLongPress(el, onLongPress, onShortTap) {
+  let timer = null, longFired = false;
+  const threshold = 500; // ms
+  let startX = 0, startY = 0;
+
+  const start = (e) => {
+    longFired = false;
+    const p = getPoint(e);
+    startX = p.x; startY = p.y;
+    timer = setTimeout(() => { longFired = true; onLongPress(e); }, threshold);
+  };
+  const move = (e) => {
+    if (!timer) return;
+    const p = getPoint(e);
+    if (Math.hypot(p.x - startX, p.y - startY) > 10) { clear(); }
+  };
+  const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
+  const end = (e) => {
+    if (timer) { // short tap
+      clear();
+      if (!longFired && onShortTap) onShortTap(e);
+    }
+  };
+
+  el.addEventListener('pointerdown', start, { passive: true });
+  el.addEventListener('pointermove', move, { passive: true });
+  el.addEventListener('pointerup', end, { passive: true });
+  el.addEventListener('pointercancel', clear, { passive: true });
+  el.addEventListener('pointerleave', clear, { passive: true });
+}
+function getPoint(e){ return { x: e.clientX ?? (e.touches?.[0]?.clientX||0), y: e.clientY ?? (e.touches?.[0]?.clientY||0) }; }
 
 async function renderPieces(authorId) {
   const author = await getAuthor(authorId);
@@ -290,13 +399,19 @@ async function renderPieceDetail(id) {
 }
 
 async function delPieceAndRefresh(id) { await delPiece(id); route(); }
-function confirmDeleteAuthor(id) {
-  if (confirm('Delete author and all texts?')) deleteAuthor(id).then(route);
-}
 
 // ---------- Helpers ----------
 function escapeHtml(s=''){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 function escapeAttr(s=''){ return s.replace(/"/g,'&quot;'); }
+
+function showToast(text, ms=2000){
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = text;
+  document.body.appendChild(el);
+  requestAnimationFrame(()=> el.classList.add('show'));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(), 250); }, ms);
+}
 
 // ---------- Install prompt ----------
 let deferredPrompt;
@@ -305,18 +420,23 @@ function setupInstallPrompt(){
     e.preventDefault();
     deferredPrompt = e;
     const btn = document.getElementById('installBtn');
-    btn.classList.remove('hidden');
-    btn.onclick = async () => {
-      btn.classList.add('hidden');
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-    };
+    if (btn) {
+      btn.classList.remove('hidden');
+      btn.onclick = async () => {
+        btn.classList.add('hidden');
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      };
+    }
   });
   // footer controls
-  document.getElementById('homeBtn').onclick = () => goto('#/home');
-  document.getElementById('exportBtn').onclick = () => exportJSON();
-  document.getElementById('importInput').addEventListener('change', (e)=>{
+  const homeBtn = document.getElementById('homeBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const importInput = document.getElementById('importInput');
+  if (homeBtn) homeBtn.onclick = () => goto('#/home');
+  if (exportBtn) exportBtn.onclick = () => exportJSON();
+  if (importInput) importInput.addEventListener('change', (e)=>{
     const f = e.target.files[0]; if (f) importJSON(f).then(()=>route());
   });
 }

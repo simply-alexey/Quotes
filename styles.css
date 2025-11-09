@@ -26,9 +26,16 @@ main#app{padding:16px 16px 88px}
 }
 .btn.acc{background:var(--acc);border-color:#5ec875;color:#06150d}
 
+/* Danger button */
+.btn.danger{
+  background:#ffdddd;
+  border-color:#c0392b;
+  color:#a40000;
+}
+
 .group{display:grid;gap:.5rem}
 
-/* Inputs keep dark look for readability inside dark cards */
+/* Inputs: dark style for cards; light variant for inline author edit */
 .input, textarea{
   width:100%;
   background:#121317;
@@ -36,6 +43,11 @@ main#app{padding:16px 16px 88px}
   border-radius:12px;
   color:#f5f7fb;
   padding:10px 12px
+}
+.input.light{
+  background:#fff;
+  border:1px solid #b7c2d0;
+  color:#000;
 }
 textarea{min-height:180px;resize:vertical}
 
@@ -52,39 +64,29 @@ h2{font-size:1rem;margin:0 0 .5rem}
   display:flex;gap:10px;justify-content:space-between;align-items:center;
   padding:12px 16px;border-top:1px solid #d9d9d9
 }
-
 /* Make all three footer controls the same size with navy background */
 .bottombar button,
 .bottombar .import-label{
-  background:navy;                  /* navy background */
-  border:2px solid navy;            /* navy border */
-  color:#fff;                       /* white text */
+  background:navy;
+  border:2px solid navy;
+  color:#fff;
   border-radius:12px;
   font-weight:600;
   font-size:1rem;
-  width:110px;                      /* equal width */
-  height:44px;                      /* equal height */
-  padding:0;                        /* size by width/height */
-  display:inline-flex;              /* align content centrally */
+  width:110px;
+  height:44px;
+  padding:0;
+  display:inline-flex;
   align-items:center;
   justify-content:center;
 }
 .import-label{cursor:pointer}
 
 /* ===== Home screen layout ===== */
-.home-categories{
-  display:grid;
-  gap:16px;
-  padding:16px;
-}
+.home-categories{ display:grid; gap:16px; padding:16px; }
+.home-categories .btn{ font-size:2.0em; padding:14px 18px; }
 
-/* Home buttons (already reduced by ~20%) */
-.home-categories .btn{
-  font-size:2.0em;
-  padding:14px 18px;
-}
-
-/* ===== Authors screen (light page, no dark card) ===== */
+/* ===== Authors screen (light page) ===== */
 .authors-page h2{ margin:0 0 8px; }
 .authors-grid{
   display:grid;
@@ -92,11 +94,11 @@ h2{font-size:1rem;margin:0 0 .5rem}
   grid-template-columns: 1fr;
   padding:8px 0 4px;
 }
-/* Author buttons: like home but 20% smaller */
-.author-btn{
-  font-size:1.6em;
-  padding:11px 14px;
-}
+.author-item{ }
+.author-btn{ font-size:1.6em; padding:11px 14px; }
+
+/* Inline edit block */
+.author-edit{ background:#f8f9fb; border:1px solid #d9e0ea; border-radius:12px; padding:10px; }
 
 /* Floating action button (+) */
 .fab{
@@ -115,10 +117,16 @@ h2{font-size:1rem;margin:0 0 .5rem}
   align-items:center;
   justify-content:center;
   box-shadow:0 6px 16px rgba(0,0,0,.25);
-  z-index: 10;            /* ensure it is always tappable */
+  z-index: 10;
 }
 
-/* (Removed modal styles — no add dialog anymore) */
+/* Toast (one-time tip) */
+.toast{
+  position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(10px);
+  background:#111; color:#fff; padding:10px 14px; border-radius:12px; font-size:.95rem;
+  opacity:0; transition:opacity .2s ease, transform .2s ease; z-index:9999;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
 .search{margin:6px 0 10px}
 .small{font-size:.85rem}
