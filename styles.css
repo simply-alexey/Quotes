@@ -2,7 +2,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,system-ui}
 
-/* Bars use light backgrounds across the whole app now */
+/* Bars use light backgrounds across the whole app */
 .topbar{position:sticky;top:0;display:flex;gap:.5rem;align-items:center;justify-content:space-between;padding:12px 16px;background:#f2f2f2;box-shadow:0 1px 0 #d9d9d9}
 .topbar h1{margin:0;font-size:1.1rem;letter-spacing:.2px}
 .topbar button{background:var(--acc);color:#06270f;border:0;border-radius:10px;padding:8px 12px;font-weight:600}
@@ -10,12 +10,12 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system
 .hidden{display:none}
 main#app{padding:16px 16px 88px}
 
-/* Cards remain dark for contrast (unchanged) */
+/* Cards for inner content */
 .card{background:var(--card);border:1px solid #2a2d33;border-radius:14px;padding:14px;margin:10px 0}
 .row{display:flex;align-items:center;gap:.75rem}
 .row.space{justify-content:space-between}
 
-/* Global button style switched to light-blue with navy border and black text */
+/* Global button style: light-blue with navy border and black text */
 .btn{
   background:#cfe8ff;               /* light blue */
   border:2px solid navy;            /* navy border */
@@ -28,7 +28,7 @@ main#app{padding:16px 16px 88px}
 
 .group{display:grid;gap:.5rem}
 
-/* Inputs keep dark look for readability on dark cards */
+/* Inputs keep dark look for readability inside dark cards */
 .input, textarea{
   width:100%;
   background:#121317;
@@ -58,13 +58,13 @@ h2{font-size:1rem;margin:0 0 .5rem}
 .bottombar .import-label{
   background:navy;                  /* navy background */
   border:2px solid navy;            /* navy border */
-  color:#fff;                       /* white text for contrast */
+  color:#fff;                       /* white text */
   border-radius:12px;
   font-weight:600;
   font-size:1rem;
   width:110px;                      /* equal width */
   height:44px;                      /* equal height */
-  padding:0;                        /* size governed by width/height */
+  padding:0;                        /* size by width/height */
   display:inline-flex;              /* align content centrally */
   align-items:center;
   justify-content:center;
@@ -73,18 +73,66 @@ h2{font-size:1rem;margin:0 0 .5rem}
 /* Ensure Import label behaves like a button */
 .import-label{cursor:pointer}
 
-/* Home screen layout with slightly reduced (20% smaller) big buttons */
+/* ===== Home screen layout ===== */
 .home-categories{
   display:grid;
   gap:16px;
   padding:16px;
 }
 
-/* Previously 2.5em & 18/22px — now reduced by ~20% */
+/* Home buttons (already reduced by ~20% earlier) */
 .home-categories .btn{
-  font-size:2.0em;        /* 20% smaller than 2.5em */
-  padding:14px 18px;      /* 20% smaller than 18px 22px */
+  font-size:2.0em;        /* 20% smaller than original 2.5em */
+  padding:14px 18px;      /* 20% smaller than 18/22 */
 }
+
+/* ===== Authors screen ===== */
+.authors-grid{
+  display:grid;
+  gap:16px;
+  grid-template-columns: 1fr;
+  padding:8px 0 4px;
+}
+
+/* Author buttons: same style as home, but 20% smaller than home */
+.author-btn{
+  font-size:1.6em;        /* 20% smaller than 2.0em */
+  padding:11px 14px;      /* ~20% smaller than 14/18 */
+}
+
+/* Floating action button (+) */
+.fab{
+  position:fixed;
+  right:20px;
+  bottom:88px;            /* sits above the bottom bar */
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:navy;
+  color:#fff;
+  border:2px solid navy;
+  font-size:1.8rem;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 16px rgba(0,0,0,.25);
+}
+
+/* Modal styles for "Add author" */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.4);
+  display:flex; align-items:center; justify-content:center;
+  z-index:1000;
+}
+.modal{
+  width:min(92vw, 420px);
+  background:#fff; color:#000;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 12px 28px rgba(0,0,0,.35);
+}
+.modal-title{ margin:0 0 10px; font-size:1.1rem; }
 
 .search{margin:6px 0 10px}
 .small{font-size:.85rem}

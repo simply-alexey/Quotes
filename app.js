@@ -181,42 +181,65 @@ function renderHome() {
 }
 
 async function renderAuthors(category) {
-  const searchId = 'search-auth';
   app.innerHTML = `
     <div class="card">
-      <h2>${category}</h2>
-      <input id="${searchId}" class="input search" placeholder="Search authors…" />
-      <div id="authors" class="list"></div>
-      <div class="row space" style="margin-top:10px">
-        <input id="newAuthor" class="input" placeholder="New author name" />
-        <button class="btn acc" id="addAuthorBtn">Add</button>
+      <div class="row space">
+        <h2>${category}</h2>
+      </div>
+      <div id="authors" class="authors-grid"></div>
+    </div>
+
+    <!-- Floating Add (+) button -->
+    <button id="fabAddAuthor" class="fab" aria-label="Add author">+</button>
+
+    <!-- Modal for adding author -->
+    <div id="authorModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="authorModalTitle">
+      <div class="modal">
+        <h3 id="authorModalTitle" class="modal-title">Add author</h3>
+        <input id="newAuthor" class="input" placeholder="Author name" />
+        <div class="row space" style="margin-top:12px">
+          <button class="btn" id="cancelAuthorBtn">Cancel</button>
+          <button class="btn acc" id="confirmAuthorBtn">Add</button>
+        </div>
       </div>
     </div>
   `;
+
   const cont = $('#authors');
+
   async function refresh() {
-    const items = await listAuthors(category, $(`#${searchId}`).value.trim());
-    cont.innerHTML = items.length ? items.map(a => (
-      `<div class="item">
-         <div>
-           <div class="title">${escapeHtml(a.name)}</div>
-           <div class="small muted">${category}</div>
-         </div>
-         <div class="row">
-           <button class="btn" onclick="goto('#/pieces/${a.id}')">Open</button>
-           <button class="btn" onclick="confirmDeleteAuthor(${a.id})">Delete</button>
-         </div>
-       </div>`)).join('')
-       : `<div class="muted">No authors yet.</div>`;
+    const items = await listAuthors(category);
+    cont.innerHTML = items.length
+      ? items.map(a => `<button class="btn author-btn" onclick="goto('#/pieces/${a.id}')">${escapeHtml(a.name)}</button>`).join('')
+      : `<div class="muted">No authors yet.</div>`;
   }
+
   await refresh();
-  $(`#${searchId}`).addEventListener('input', refresh);
-  $('#addAuthorBtn').addEventListener('click', async ()=>{
+
+  // FAB opens modal
+  $('#fabAddAuthor').addEventListener('click', () => {
+    $('#authorModal').classList.remove('hidden');
+    setTimeout(() => { $('#newAuthor').focus(); }, 0);
+  });
+
+  // Cancel closes modal
+  $('#cancelAuthorBtn').addEventListener('click', () => {
+    $('#authorModal').classList.add('hidden');
+  });
+
+  // Confirm adds author
+  $('#confirmAuthorBtn').addEventListener('click', async () => {
     const name = $('#newAuthor').value.trim();
     if (!name) return;
     await addAuthor(name, category);
-    $('#newAuthor').value='';
+    $('#authorModal').classList.add('hidden');
+    $('#newAuthor').value = '';
     await refresh();
+  });
+
+  // Close modal on backdrop click (but not when clicking inside modal)
+  $('#authorModal').addEventListener('click', (e) => {
+    if (e.target.id === 'authorModal') $('#authorModal').classList.add('hidden');
   });
 }
 
