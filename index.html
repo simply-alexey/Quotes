@@ -25,7 +25,8 @@
     </label>
   </footer>
 
-  <script src="app.js"></script>
+  <!-- versioned to bust any lingering caches -->
+  <script src="app.js?v=2"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
