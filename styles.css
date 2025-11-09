@@ -10,7 +10,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system
 .hidden{display:none}
 main#app{padding:16px 16px 88px}
 
-/* Cards for inner content */
+/* Cards for inner content (pieces & detail keep dark cards for contrast) */
 .card{background:var(--card);border:1px solid #2a2d33;border-radius:14px;padding:14px;margin:10px 0}
 .row{display:flex;align-items:center;gap:.75rem}
 .row.space{justify-content:space-between}
@@ -69,8 +69,6 @@ h2{font-size:1rem;margin:0 0 .5rem}
   align-items:center;
   justify-content:center;
 }
-
-/* Ensure Import label behaves like a button */
 .import-label{cursor:pointer}
 
 /* ===== Home screen layout ===== */
@@ -80,24 +78,24 @@ h2{font-size:1rem;margin:0 0 .5rem}
   padding:16px;
 }
 
-/* Home buttons (already reduced by ~20% earlier) */
+/* Home buttons (already reduced by ~20%) */
 .home-categories .btn{
-  font-size:2.0em;        /* 20% smaller than original 2.5em */
-  padding:14px 18px;      /* 20% smaller than 18/22 */
+  font-size:2.0em;
+  padding:14px 18px;
 }
 
-/* ===== Authors screen ===== */
+/* ===== Authors screen (light page, no dark card) ===== */
+.authors-page h2{ margin:0 0 8px; }
 .authors-grid{
   display:grid;
   gap:16px;
   grid-template-columns: 1fr;
   padding:8px 0 4px;
 }
-
-/* Author buttons: same style as home, but 20% smaller than home */
+/* Author buttons: like home but 20% smaller */
 .author-btn{
-  font-size:1.6em;        /* 20% smaller than 2.0em */
-  padding:11px 14px;      /* ~20% smaller than 14/18 */
+  font-size:1.6em;
+  padding:11px 14px;
 }
 
 /* Floating action button (+) */
@@ -117,22 +115,10 @@ h2{font-size:1rem;margin:0 0 .5rem}
   align-items:center;
   justify-content:center;
   box-shadow:0 6px 16px rgba(0,0,0,.25);
+  z-index: 10;            /* ensure it is always tappable */
 }
 
-/* Modal styles for "Add author" */
-.modal-backdrop{
-  position:fixed; inset:0; background:rgba(0,0,0,.4);
-  display:flex; align-items:center; justify-content:center;
-  z-index:1000;
-}
-.modal{
-  width:min(92vw, 420px);
-  background:#fff; color:#000;
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 12px 28px rgba(0,0,0,.35);
-}
-.modal-title{ margin:0 0 10px; font-size:1.1rem; }
+/* (Removed modal styles — no add dialog anymore) */
 
 .search{margin:6px 0 10px}
 .small{font-size:.85rem}

@@ -160,7 +160,7 @@ const Categories = ['Poems','Quotes'];
 
 function route() {
   const hash = location.hash || '#/home';
-  const [ , first, second, third ] = hash.split('/'); // e.g. #/author/Poems or #/pieces/authorId
+  const [ , first, second ] = hash.split('/');
 
   // toggle body class for home-only styling
   document.body.classList.toggle('home', first === 'home');
@@ -181,27 +181,12 @@ function renderHome() {
 }
 
 async function renderAuthors(category) {
+  // Plain light page (no dark card), title + grid of author buttons, and a FAB that directly adds.
   app.innerHTML = `
-    <div class="card">
-      <div class="row space">
-        <h2>${category}</h2>
-      </div>
+    <div class="authors-page">
+      <h2>${category}</h2>
       <div id="authors" class="authors-grid"></div>
-    </div>
-
-    <!-- Floating Add (+) button -->
-    <button id="fabAddAuthor" class="fab" aria-label="Add author">+</button>
-
-    <!-- Modal for adding author -->
-    <div id="authorModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="authorModalTitle">
-      <div class="modal">
-        <h3 id="authorModalTitle" class="modal-title">Add author</h3>
-        <input id="newAuthor" class="input" placeholder="Author name" />
-        <div class="row space" style="margin-top:12px">
-          <button class="btn" id="cancelAuthorBtn">Cancel</button>
-          <button class="btn acc" id="confirmAuthorBtn">Add</button>
-        </div>
-      </div>
+      <button id="fabAddAuthor" class="fab" aria-label="Add author">+</button>
     </div>
   `;
 
@@ -216,30 +201,12 @@ async function renderAuthors(category) {
 
   await refresh();
 
-  // FAB opens modal
-  $('#fabAddAuthor').addEventListener('click', () => {
-    $('#authorModal').classList.remove('hidden');
-    setTimeout(() => { $('#newAuthor').focus(); }, 0);
-  });
-
-  // Cancel closes modal
-  $('#cancelAuthorBtn').addEventListener('click', () => {
-    $('#authorModal').classList.add('hidden');
-  });
-
-  // Confirm adds author
-  $('#confirmAuthorBtn').addEventListener('click', async () => {
-    const name = $('#newAuthor').value.trim();
+  // FAB directly asks for a name and adds the author (no modal)
+  $('#fabAddAuthor').addEventListener('click', async () => {
+    const name = (prompt('Author name') || '').trim();
     if (!name) return;
     await addAuthor(name, category);
-    $('#authorModal').classList.add('hidden');
-    $('#newAuthor').value = '';
     await refresh();
-  });
-
-  // Close modal on backdrop click (but not when clicking inside modal)
-  $('#authorModal').addEventListener('click', (e) => {
-    if (e.target.id === 'authorModal') $('#authorModal').classList.add('hidden');
   });
 }
 
