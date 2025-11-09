@@ -224,9 +224,8 @@ async function renderAuthors(category) {
 
     cont.querySelectorAll('.author-item').forEach(item => {
       const id = Number(item.dataset.id);
-      const name = item.dataset.name;
       const openBtn = item.querySelector('[data-role="open"]');
-      addLongPress(openBtn, () => enterEditAuthor(item, id, name), () => goto(`#/pieces/${id}`));
+      addLongPress(openBtn, () => enterEditAuthor(item, id, item.dataset.name), () => goto(`#/pieces/${id}`));
     });
   }
 
@@ -402,8 +401,8 @@ async function renderPieces(authorId) {
     itemEl.innerHTML = `
       <div class="piece-edit">
         ${isQuote ? '' : `<input class="input light" value="${escapeAttr(p.title||'')}" placeholder="Title">`}
-        <textarea class="input light ta" placeholder="${isQuote ? 'Quote text…' : 'Text…'}">${escapeHtml(p.text||'')}</textarea>
-        <label class="fav-row"><input type="checkbox" class="favChk" ${p.favorite ? 'checked' : ''}> <span>Favourite</span></label>
+        <textarea class="input light ta" placeholder="${isQuote ? 'Quote text…' : 'Write text here…'}">${escapeHtml(p.text||'')}</textarea>
+        <label class="fav-row"><input type="checkbox" ${p.favorite?'checked':''}> <span>Favourite</span></label>
         <div class="row space">
           <button class="btn" data-cancel>Cancel</button>
           <div class="row" style="gap:.5rem">
@@ -415,32 +414,29 @@ async function renderPieces(authorId) {
     `;
     const titleEl = itemEl.querySelector('input');
     const textEl  = itemEl.querySelector('textarea');
-    const favChk  = itemEl.querySelector('.favChk');
+    const favEl   = itemEl.querySelector('input[type="checkbox"]');
     const saveBtn = itemEl.querySelector('[data-save]');
     const cancelBtn = itemEl.querySelector('[data-cancel]');
     const delBtn = itemEl.querySelector('[data-delete]');
 
-    (titleEl || textEl).focus();
-
-    [saveBtn, cancelBtn, delBtn].forEach(b => solidTapTarget(b, [elFilter(titleEl), elFilter(textEl)]));
+    solidTapTarget(saveBtn, [titleEl, textEl]);
+    solidTapTarget(cancelBtn, [titleEl, textEl]);
+    solidTapTarget(delBtn, [titleEl, textEl]);
 
     saveBtn.addEventListener('click', async (e)=>{
       e.stopPropagation();
-      const newTitle = isQuote ? (p.title||'') : (titleEl?.value || '').trim();
-      const newText  = (textEl?.value || '').trim();
-      const fav      = !!favChk?.checked;
-      if (!newText) return;
-      await savePiece(id, { title:newTitle, text:newText, favorite:fav });
+      await savePiece(id, {
+        title: titleEl ? titleEl.value.trim() : p.title,
+        text: (textEl?.value||'').trim(),
+        favorite: !!favEl?.checked
+      });
       await refresh();
     });
-
     cancelBtn.addEventListener('click', async (e)=>{ e.stopPropagation(); await refresh(); });
-
     delBtn.addEventListener('click', async (e)=>{
       e.stopPropagation();
-      if (!confirm('Delete this entry?')) return;
-      await delPiece(id);
-      await refresh();
+      if(!confirm('Delete this item?')) return;
+      await delPiece(id); await refresh();
     });
 
     textEl?.addEventListener('keydown', async (e)=>{
@@ -452,7 +448,6 @@ async function renderPieces(authorId) {
       if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click(); }
     });
   }
-  function elFilter(x){ return x || { blur(){} }; }
 
   await refresh();
 }
@@ -490,7 +485,7 @@ function addLongPress(el, onLongPress, onShortTap) {
 }
 function getPoint(e){ return { x: e.clientX ?? (e.touches?.[0]?.clientX||0), y: e.clientY ?? (e.touches?.[0]?.clientY||0) }; }
 
-/* ===== Read view (new) ===== */
+/* ===== Read view (viewer) ===== */
 async function renderReadPiece(id) {
   const p = await getPiece(id);
   if (!p) return renderHome();
@@ -515,27 +510,25 @@ async function renderReadPiece(id) {
   const readEl = $('#readText');
   readEl.textContent = p.text || '';
 
-  // --- Robust autosize: binary-search real element width so no clipping ever ---
+  // Robust auto-sizer: guarantees the widest line fits inside the container
   function autoScale() {
-    const cs = getComputedStyle(readEl);
-    const min = 14, max = 40;
-    const fudge = 1.5; // px safety
-    const margin = 0.98; // 2% margin to stay inside
-    const clientW = readEl.clientWidth; // includes padding; scrollWidth will too
+    const containerWidth = readEl.getBoundingClientRect().width; // padding included
+    if (!containerWidth) return;
 
-    // Start from max, then binary-search down until it fits
-    let lo = min, hi = max, best = min;
-
-    // quick pre-check at max
+    // Allow smaller minimum in case of very long lines
+    let lo = 10, hi = 40, best = lo;     // <- lo dropped from 14 to 10
+    // quick try at max
     readEl.style.fontSize = `${hi}px`;
-    if (readEl.scrollWidth <= clientW * margin - fudge) {
+    const margin = 0.98;                 // 2% safety margin
+    const fudge = 1.5;                   // px cushion
+
+    if (readEl.scrollWidth <= containerWidth * margin - fudge) {
       best = hi;
     } else {
-      // binary search
       while (lo <= hi) {
         const mid = Math.floor((lo + hi) / 2);
         readEl.style.fontSize = `${mid}px`;
-        const fits = readEl.scrollWidth <= clientW * margin - fudge;
+        const fits = readEl.scrollWidth <= containerWidth * margin - fudge;
         if (fits) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
       }
     }
@@ -544,7 +537,7 @@ async function renderReadPiece(id) {
 
   autoScale();
   window.addEventListener('resize', autoScale, { passive: true });
-  // Also recalc after bars animate on iOS
+  // Re-run after iOS bars settle
   setTimeout(autoScale, 50);
   setTimeout(autoScale, 300);
 }
@@ -565,26 +558,24 @@ function showToast(text, ms=2000){
 // ---------- Install prompt ----------
 let deferredPrompt;
 function setupInstallPrompt(){
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const btn = document.getElementById('installBtn');
-    if (btn) {
-      btn.classList.remove('hidden');
-      btn.onclick = async () => {
-        btn.classList.add('hidden');
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
-      };
-    }
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    e.preventDefault(); deferredPrompt = e;
+    $('#installBtn')?.classList.remove('hidden');
   });
-  const homeBtn = document.getElementById('homeBtn');
-  const exportBtn = document.getElementById('exportBtn');
-  const importInput = document.getElementById('importInput');
-  if (homeBtn) homeBtn.onclick = () => goto('#/home');
-  if (exportBtn) exportBtn.onclick = () => exportJSON();
-  if (importInput) importInput.addEventListener('change', (e)=>{
-    const f = e.target.files[0]; if (f) importJSON(f).then(()=>route());
+  $('#installBtn')?.addEventListener('click', async ()=>{
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    $('#installBtn')?.classList.add('hidden');
   });
 }
+
+// Footer actions
+document.addEventListener('click', (e)=>{
+  if (e.target.id === 'homeBtn') goto('#/home');
+  if (e.target.id === 'exportBtn') exportJSON();
+});
+document.getElementById('importInput')?.addEventListener('change', (e)=> {
+  const file = e.target.files?.[0]; if (file) importJSON(file);
+});

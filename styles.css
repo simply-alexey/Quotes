@@ -1,93 +1,89 @@
-:root { --bg:#eee; --card:#1b1c1f; --text:#000; --muted:#4b5563; --acc:#7bd389; }
+:root{
+  --bg:#eee;
+  --btn-bg:#cfe6ff;
+  --btn-border:#0b1d6b;
+  --btn-text:#000;
+  --acc:#0b1d6b;
+}
+
+/* Base layout */
 *{box-sizing:border-box}
-html, body{-webkit-text-size-adjust:100%; overflow-x:hidden;} /* prevent sideways panning */
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,system-ui}
-
-/* Bars */
-.topbar{position:sticky;top:0;display:flex;gap:.5rem;align-items:center;justify-content:space-between;padding:12px 16px;background:#f2f2f2;box-shadow:0 1px 0 #d9d9d9}
-.topbar h1{margin:0;font-size:1.1rem;letter-spacing:.2px}
-.topbar button{background:var(--acc);color:#06270f;border:0;border-radius:10px;padding:8px 12px;font-weight:600}
-
-.hidden{display:none}
-main#app{padding:16px 16px 88px}
-
-/* Cards (legacy detail kept but not used in new flow) */
-.card{background:var(--card);border:1px solid #2a2d33;border-radius:14px;padding:14px;margin:10px 0}
-.row{display:flex;align-items:center;gap:.75rem}
-.row.space{justify-content:space-between}
-
-/* Buttons */
-.btn{
-  background:#cfe8ff;
-  border:2px solid navy;
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background:#eee;                    /* light grey app background */
   color:#000;
-  padding:10px 12px;
-  border-radius:12px;
-  font-weight:600;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  -webkit-user-select: none;
-  user-select: none;
-  position: relative;
-  z-index: 1;
+  overflow-x:hidden;                   /* never allow horizontal scrolling */
 }
-.btn.acc{background:var(--acc);border-color:#5ec875;color:#06150d}
-.btn.danger{background:#ffdddd;border-color:#c0392b;color:#a40000}
 
-.group{display:grid;gap:.5rem}
+/* Top bar */
+.topbar{
+  position:sticky;top:0;z-index:5;
+  background:#f8f8f8;border-bottom:1px solid #ddd;
+  padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
+}
+.topbar h1{font-size:1.6rem;margin:0}
 
-/* Inputs — keep 16px to avoid iOS zoom */
-.input, textarea{
+/* Generic button */
+.btn{
+  background:var(--btn-bg);
+  color:var(--btn-text);
+  border:3px solid var(--btn-border);
+  border-radius:16px;
+  font-weight:700;
+  padding:14px 18px;
+  font-size:2.0em;                     /* home size; others override */
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.btn.acc{background:#8ee08e;border-color:#4aa24a}
+.btn.danger{background:#ffb3b3;border-color:#bb2e2e}
+
+/* Inputs */
+.input{
   width:100%;
-  background:#121317;
-  border:1px solid #2a2d33;
-  border-radius:12px;
-  color:#f5f7fb;
   padding:10px 12px;
-  font-size:16px;
+  border-radius:12px;
+  border:1px solid #c9cdd3;
+  font-size:1rem;
 }
-.input.light{background:#fff;border:1px solid #b7c2d0;color:#000}
-textarea{min-height:180px;resize:vertical}
+.input.ta{min-height:120px;resize:vertical}
+.input.light{background:#eaeef3;color:#000}
 
-/* Smaller textarea helper */
-.ta{ min-height:120px; resize:vertical; }
-
-h2{font-size:1rem;margin:0 0 .5rem}
-.muted{color:var(--muted)}
-.list{display:grid;gap:.5rem}
-.item{display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid #2a2d33;border-radius:12px;background:#14161a}
-.item .title{font-weight:600}
-
-/* Bottom bar */
+/* Bottom bar and its buttons */
 .bottombar{
   position:fixed;bottom:0;left:0;right:0;
   background:#f2f2f2;
   display:flex;gap:10px;justify-content:space-between;align-items:center;
   padding:12px 16px;border-top:1px solid #d9d9d9
 }
-.bottombar button,.bottombar .import-label{
-  background:navy;border:2px solid navy;color:#fff;border-radius:12px;font-weight:600;
-  font-size:1rem;width:110px;height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;
+
+/* Make all three footer controls the same size with navy background */
+.bottombar button,
+.bottombar .import-label{
+  background:navy;                  /* navy background */
+  border:2px solid navy;            /* navy border */
+  color:#fff;                       /* white text */
+  border-radius:12px;
+  font-weight:600;
+  font-size:1rem;
+  width:110px;                      /* equal width */
+  height:44px;                      /* equal height */
+  padding:0;                        /* size by width/height */
+  display:inline-flex;              /* align content centrally */
+  align-items:center;
+  justify-content:center;
 }
 .import-label{cursor:pointer}
 
-/* Home */
+/* ===== Home screen layout ===== */
 .home-categories{ display:grid; gap:16px; padding:16px; }
 .home-categories .btn{ font-size:2.0em; padding:14px 18px; }
 
-/* Authors */
+/* ===== Authors screen ===== */
 .authors-page h2{ margin:0 0 8px; }
 .authors-grid{ display:grid; gap:16px; grid-template-columns:1fr; padding:8px 0 4px; }
-.author-item{ width:100%; }
-.author-btn{ display:block; width:100%; min-height:64px; font-size:1.6em; padding:11px 14px; text-align:center; }
-
-/* Inline author edit */
-.author-edit{
-  display:flex; flex-direction:column; gap:12px;
-  background:#f8f9fb; border:1px solid #d9e0ea; border-radius:12px; padding:12px;
-  position: relative;
-}
-.author-edit .edit-actions .btn{ min-height:48px; }
+.author-btn{ font-size:1.6em; padding:11px 14px; }
 
 /* ===== Pieces list page ===== */
 .pieces-page {}
@@ -103,45 +99,51 @@ h2{font-size:1rem;margin:0 0 .5rem}
 }
 .fav-row{ display:inline-flex; gap:8px; align-items:center; font-size:.95rem; }
 
-/* ===== Read view (new) ===== */
-.read-page { }
-.read-header { margin-bottom: 6px; }
-.read-author { font-weight:700; margin:0 0 2px; }
-.read-title  { font-weight:600; margin:0 0 6px; }
+/* ===== Read (viewer) page ===== */
+.read-page{}
+.read-header{ margin:8px 16px 6px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.read-author{ font-weight:700; margin:0 0 2px; }
+.read-title { font-weight:600; margin:0 0 6px; }
+
+/* The text block itself */
 .read-text{
   background:transparent;
   color:#000;
-  padding:12px 24px;          /* breathing room on both sides */
-  white-space:pre;            /* preserve your line breaks */
-  line-height:1.4;
-  font-size:20px;             /* JS will auto-scale */
-  overflow-wrap:normal;
+  padding:12px 20px 80px;            /* breathing room + room over footer */
+  white-space:pre;                   /* keep your manual line breaks */
+  line-height:1.35;
+  font-size:20px;                    /* JS will auto-scale this */
+  overflow-x:hidden;                 /* prevent side scroll */
+  max-width:100%;
   word-break:normal;
-  overflow-x:hidden;          /* no horizontal scroll just in case */
+  overflow-wrap:normal;
 }
 
 /* Floating action button (+) */
 .fab{
-  position:fixed; right:20px; bottom:88px; width:56px; height:56px; border-radius:50%;
-  background:navy; color:#fff; border:2px solid navy; font-size:1.8rem; line-height:1;
-  display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,.25); z-index:10;
+  position:fixed;
+  right:20px;
+  bottom:88px;            /* sits above the bottom bar */
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:navy;
+  color:#fff;
+  border:2px solid navy;
+  font-size:1.8rem;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 16px rgba(0,0,0,.25);
+  z-index:10;
 }
 
-/* Modal (for Pieces add) */
-.modal-backdrop{
-  position:fixed; inset:0; background:rgba(0,0,0,.4);
-  display:flex; align-items:center; justify-content:center;
-  z-index:1000;
-}
-.modal{
-  width:min(92vw, 480px);
-  background:#fff; color:#000;
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 12px 28px rgba(0,0,0,.35);
-}
+/* Modal for adding pieces */
+.modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.modal{ width:min(92vw,480px); background:#fff; color:#000; border-radius:14px; padding:16px; box-shadow:0 12px 28px rgba(0,0,0,.35); }
 .modal-title{ margin:0 0 10px; font-size:1.1rem; }
-.modal-backdrop.hidden { display:none !important; }
+.modal-backdrop.hidden{ display:none !important; }
 
 /* Toast */
 .toast{
@@ -151,6 +153,8 @@ h2{font-size:1rem;margin:0 0 .5rem}
 }
 .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-.search{margin:6px 0 10px}
-.small{font-size:.85rem}
-a{ color: var(--acc); text-decoration: none; }
+/* Utilities */
+.row{display:flex;gap:10px;align-items:center}
+.row.space{justify-content:space-between}
+.muted{opacity:.65}
+.hidden{display:none}
