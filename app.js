@@ -314,8 +314,8 @@ async function renderPieces(authorId) {
           <textarea id="pmText" class="input light ta" placeholder="${isQuoteMode ? 'Quote text…' : 'Write text here…'}"></textarea>
           <label class="fav-row"><input type="checkbox" id="pmFav"> <span>Add to favourites</span></label>
           <div class="row space" style="margin-top:12px">
-            <button class="btn" id="pmCancel">Cancel</button>
-            <button class="btn acc" id="pmAdd">Add</button>
+            <button class="btn" id="pmCancel" type="button">Cancel</button>
+            <button class="btn acc" id="pmAdd" type="button">Add</button>
           </div>
         </div>
       </div>
@@ -325,6 +325,7 @@ async function renderPieces(authorId) {
   $('#backBtn').addEventListener('click', () => goto(`#/authors/${encodeURIComponent(author.category)}`));
 
   const cont = $('#pieces');
+  const pieceModal = $('#pieceModal');
 
   async function refresh() {
     const items = await listPieces(authorId);
@@ -360,19 +361,33 @@ async function renderPieces(authorId) {
     return parts.slice(0, words).join(' ') + '…';
   }
 
-  function openModal() { $('#pieceModal').classList.remove('hidden'); setTimeout(()=>{ ($('#pmTitle')||$('#pmText'))?.focus(); },0); }
-  function closeModal() { $('#pieceModal').classList.add('hidden'); }
+  function openModal() {
+    pieceModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    setTimeout(()=>{ ($('#pmTitle')||$('#pmText'))?.focus(); },0);
+  }
+  function closeModal() {
+    pieceModal.classList.add('hidden');
+    // Clear & blur to fully dismiss keyboard/zoom state
+    document.activeElement?.blur?.();
+    const t = $('#pmTitle'); const x = $('#pmText'); const f = $('#pmFav');
+    if (t) t.value = '';
+    if (x) x.value = '';
+    if (f) f.checked = false;
+    document.body.style.overflow = '';
+  }
 
   $('#fabAddPiece').addEventListener('click', openModal);
-  $('#pieceModal').addEventListener('click', (e)=>{ if (e.target.id === 'pieceModal') closeModal(); });
-  $('#pmCancel').addEventListener('click', closeModal);
-  $('#pmAdd').addEventListener('click', async ()=>{
+  pieceModal.addEventListener('click', (e)=>{ if (e.target.id === 'pieceModal') closeModal(); });
+  $('#pmCancel').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeModal(); });
+  $('#pmAdd').addEventListener('click', async (e)=>{
+    e.preventDefault(); e.stopPropagation();
     const title = isQuoteMode ? '' : ($('#pmTitle')?.value || '').trim();
     const text  = ($('#pmText')?.value || '').trim();
     const fav   = $('#pmFav')?.checked || false;
     if (!text) return;
     await addPiece(authorId, title, text, fav);
-    closeModal();
+    closeModal();         // <- close immediately after success
     await refresh();
   });
 

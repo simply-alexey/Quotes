@@ -1,5 +1,6 @@
 :root { --bg:#eee; --card:#1b1c1f; --text:#000; --muted:#4b5563; --acc:#7bd389; }
 *{box-sizing:border-box}
+html, body{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,system-ui}
 
 /* Bars */
@@ -35,7 +36,7 @@ main#app{padding:16px 16px 88px}
 
 .group{display:grid;gap:.5rem}
 
-/* Inputs */
+/* Inputs — force 16px to prevent iOS auto-zoom */
 .input, textarea{
   width:100%;
   background:#121317;
@@ -43,6 +44,7 @@ main#app{padding:16px 16px 88px}
   border-radius:12px;
   color:#f5f7fb;
   padding:10px 12px;
+  font-size:16px;               /* <— prevents zoom while typing */
 }
 .input.light{background:#fff;border:1px solid #b7c2d0;color:#000}
 textarea{min-height:180px;resize:vertical}
@@ -108,7 +110,7 @@ h2{font-size:1rem;margin:0 0 .5rem}
   display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,.25); z-index:10;
 }
 
-/* Modal (re-introduced for Pieces add) */
+/* Modal (for Pieces add) */
 .modal-backdrop{
   position:fixed; inset:0; background:rgba(0,0,0,.4);
   display:flex; align-items:center; justify-content:center;
