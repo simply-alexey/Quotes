@@ -515,48 +515,36 @@ async function renderReadPiece(id) {
   const readEl = $('#readText');
   readEl.textContent = p.text || '';
 
-  // --- Accurate auto-scale so each line fits without horizontal overflow
+  // --- Robust autosize: binary-search real element width so no clipping ever ---
   function autoScale() {
     const cs = getComputedStyle(readEl);
-    const padLeft = parseFloat(cs.paddingLeft) || 0;
-    const padRight = parseFloat(cs.paddingRight) || 0;
+    const min = 14, max = 40;
+    const fudge = 1.5; // px safety
+    const margin = 0.98; // 2% margin to stay inside
+    const clientW = readEl.clientWidth; // includes padding; scrollWidth will too
 
-    // True inner content width with small safety margin for iOS rounding
-    const inner = Math.max(10, readEl.clientWidth - padLeft - padRight - 2); // -2px fudge
-    const target = inner * 0.965; // 3.5% margin to ensure no spill on the right
+    // Start from max, then binary-search down until it fits
+    let lo = min, hi = max, best = min;
 
-    // Hidden DOM ruler with identical typography for precise measurement
-    const meas = document.createElement('div');
-    meas.style.position = 'absolute';
-    meas.style.visibility = 'hidden';
-    meas.style.whiteSpace = 'pre';
-    meas.style.fontFamily = cs.fontFamily;
-    meas.style.fontWeight = cs.fontWeight;
-    meas.style.letterSpacing = cs.letterSpacing;
-    meas.style.padding = '0';
-    meas.style.margin = '0';
-    meas.style.lineHeight = cs.lineHeight;
-    meas.style.fontSize = '16px'; // base for proportional scaling
-    document.body.appendChild(meas);
-
-    const lines = (p.text || '').split('\n');
-    let longestWidth = 1;
-    for (const line of lines.length ? lines : [' ']) {
-      meas.textContent = line || ' ';
-      const w = meas.scrollWidth;
-      if (w > longestWidth) longestWidth = w;
+    // quick pre-check at max
+    readEl.style.fontSize = `${hi}px`;
+    if (readEl.scrollWidth <= clientW * margin - fudge) {
+      best = hi;
+    } else {
+      // binary search
+      while (lo <= hi) {
+        const mid = Math.floor((lo + hi) / 2);
+        readEl.style.fontSize = `${mid}px`;
+        const fits = readEl.scrollWidth <= clientW * margin - fudge;
+        if (fits) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
+      }
     }
-    document.body.removeChild(meas);
-
-    // scale from base 16px with clamping
-    let proposed = Math.floor((target / longestWidth) * 16);
-    proposed = Math.max(14, Math.min(40, proposed));
-    readEl.style.fontSize = `${proposed}px`;
+    readEl.style.fontSize = `${best}px`;
   }
 
   autoScale();
-  // resize + a delayed recalculation (accounts for iOS URL bar hide/show)
   window.addEventListener('resize', autoScale, { passive: true });
+  // Also recalc after bars animate on iOS
   setTimeout(autoScale, 50);
   setTimeout(autoScale, 300);
 }
