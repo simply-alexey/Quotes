@@ -91,7 +91,7 @@ async function getAuthor(id) {
   });
 }
 
-async function listPieces(authorId, search = '') {
+async function listPieces(authorId) {
   await openDBIfNeeded();
   return new Promise((resolve) => {
     const idx = tx('pieces').index('byAuthor');
@@ -100,17 +100,22 @@ async function listPieces(authorId, search = '') {
     idx.openCursor(range).onsuccess = (e) => {
       const cur = e.target.result;
       if (!cur) return resolve(out.sort((a,b)=>b.createdAt - a.createdAt));
-      const p = cur.value;
-      if (!search || (p.title?.toLowerCase().includes(search.toLowerCase()) || p.text.toLowerCase().includes(search.toLowerCase()))) out.push(p);
+      out.push(cur.value);
       cur.continue();
     };
   });
 }
 
-async function addPiece(authorId, title, text) {
+async function addPiece(authorId, title, text, favorite=false) {
   await openDBIfNeeded();
   return new Promise((resolve, reject) => {
-    const req = tx('pieces','readwrite').add({ authorId: Number(authorId), title, text, createdAt: Date.now() });
+    const req = tx('pieces','readwrite').add({
+      authorId: Number(authorId),
+      title: title || '',
+      text: text || '',
+      favorite: !!favorite,
+      createdAt: Date.now()
+    });
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
@@ -177,7 +182,7 @@ function route() {
   if (first === 'home') renderHome();
   else if (first === 'authors') renderAuthors(decodeURIComponent(second||'Poems'));
   else if (first === 'pieces') renderPieces(Number(second));
-  else if (first === 'piece') renderPieceDetail(Number(second));
+  else if (first === 'piece') renderPieceDetail(Number(second)); // kept for deep links
   else renderHome();
 }
 
@@ -221,18 +226,17 @@ async function renderAuthors(category) {
       const id = Number(item.dataset.id);
       const name = item.dataset.name;
       const openBtn = item.querySelector('[data-role="open"]');
-      addLongPress(openBtn, () => enterEdit(item, id, name), () => goto(`#/pieces/${id}`));
+      addLongPress(openBtn, () => enterEditAuthor(item, id, name), () => goto(`#/pieces/${id}`));
     });
   }
 
   function solidTapTarget(btn, input) {
-    // Blur the input immediately on touch so taps aren't stolen by the keyboard caret
     ['pointerdown','touchstart','mousedown'].forEach(ev => {
       btn.addEventListener(ev, () => { if (input) input.blur(); }, { passive: true });
     });
   }
 
-  function enterEdit(itemEl, id, currentName) {
+  function enterEditAuthor(itemEl, id, currentName) {
     itemEl.innerHTML = `
       <div class="author-edit">
         <input class="input light" value="${escapeAttr(currentName)}" aria-label="Author name">
@@ -250,10 +254,7 @@ async function renderAuthors(category) {
     const cancelBtn = itemEl.querySelector('[data-cancel]');
     const delBtn = itemEl.querySelector('[data-delete]');
 
-    input.focus();
-    input.setSelectionRange(0, input.value.length);
-
-    // Make action buttons robust to taps near the input
+    input.focus(); input.setSelectionRange(0, input.value.length);
     [saveBtn, cancelBtn, delBtn].forEach(b => solidTapTarget(b, input));
 
     saveBtn.addEventListener('click', async (e) => {
@@ -264,10 +265,7 @@ async function renderAuthors(category) {
       await refresh();
     });
 
-    cancelBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      await refresh();
-    });
+    cancelBtn.addEventListener('click', async (e) => { e.stopPropagation(); await refresh(); });
 
     delBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -290,6 +288,158 @@ async function renderAuthors(category) {
     await addAuthor(name, category);
     await refresh();
   });
+}
+
+/* ===== Pieces screen (Poems/Quotes) ===== */
+async function renderPieces(authorId) {
+  const author = await getAuthor(authorId);
+  if (!author) return renderHome();
+
+  const isQuoteMode = (author.category === 'Quotes');
+
+  app.innerHTML = `
+    <div class="pieces-page">
+      <div class="row space pieces-header">
+        <h2>${escapeHtml(author.name)}</h2>
+        <button class="btn" id="backBtn">Back</button>
+      </div>
+      <div id="pieces" class="pieces-grid"></div>
+      <button id="fabAddPiece" class="fab" aria-label="Add ${isQuoteMode ? 'quote' : 'poem'}">+</button>
+
+      <!-- Dialog -->
+      <div id="pieceModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+        <div class="modal">
+          <h3 class="modal-title">Add ${isQuoteMode ? 'quote' : 'poem'}</h3>
+          ${isQuoteMode ? '' : '<input id="pmTitle" class="input light" placeholder="Title">'}
+          <textarea id="pmText" class="input light ta" placeholder="${isQuoteMode ? 'Quote text…' : 'Write text here…'}"></textarea>
+          <label class="fav-row"><input type="checkbox" id="pmFav"> <span>Add to favourites</span></label>
+          <div class="row space" style="margin-top:12px">
+            <button class="btn" id="pmCancel">Cancel</button>
+            <button class="btn acc" id="pmAdd">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  $('#backBtn').addEventListener('click', () => goto(`#/authors/${encodeURIComponent(author.category)}`));
+
+  const cont = $('#pieces');
+
+  async function refresh() {
+    const items = await listPieces(authorId);
+    if (!items.length) {
+      cont.innerHTML = `<div class="muted">No ${isQuoteMode ? 'quotes' : 'poems'} yet.</div>`;
+      return;
+    }
+
+    cont.innerHTML = items.map(p => `
+      <div class="piece-item" data-id="${p.id}">
+        <button class="btn piece-btn" data-role="open">
+          ${p.favorite ? '★ ' : ''}
+          ${escapeHtml(renderPieceLabel(p, isQuoteMode))}
+        </button>
+      </div>
+    `).join('');
+
+    cont.querySelectorAll('.piece-item').forEach(item => {
+      const id = Number(item.dataset.id);
+      const openBtn = item.querySelector('[data-role="open"]');
+      addLongPress(openBtn, () => enterEditPiece(item, id, isQuoteMode), () => goto(`#/piece/${id}`));
+    });
+  }
+
+  function renderPieceLabel(p, isQuote) {
+    if (!isQuote) return p.title?.trim() ? p.title : 'Untitled';
+    return snippet(p.text || '', 8);
+  }
+
+  function snippet(txt, words=8) {
+    const parts = (txt || '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length <= words) return parts.join(' ');
+    return parts.slice(0, words).join(' ') + '…';
+  }
+
+  function openModal() { $('#pieceModal').classList.remove('hidden'); setTimeout(()=>{ ($('#pmTitle')||$('#pmText'))?.focus(); },0); }
+  function closeModal() { $('#pieceModal').classList.add('hidden'); }
+
+  $('#fabAddPiece').addEventListener('click', openModal);
+  $('#pieceModal').addEventListener('click', (e)=>{ if (e.target.id === 'pieceModal') closeModal(); });
+  $('#pmCancel').addEventListener('click', closeModal);
+  $('#pmAdd').addEventListener('click', async ()=>{
+    const title = isQuoteMode ? '' : ($('#pmTitle')?.value || '').trim();
+    const text  = ($('#pmText')?.value || '').trim();
+    const fav   = $('#pmFav')?.checked || false;
+    if (!text) return;
+    await addPiece(authorId, title, text, fav);
+    closeModal();
+    await refresh();
+  });
+
+  function solidTapTarget(btn, inputs) {
+    ['pointerdown','touchstart','mousedown'].forEach(ev => {
+      btn.addEventListener(ev, () => { inputs.forEach(i=>i.blur()); }, { passive: true });
+    });
+  }
+
+  async function enterEditPiece(itemEl, id, isQuote) {
+    const p = await getPiece(id);
+    itemEl.innerHTML = `
+      <div class="piece-edit">
+        ${isQuote ? '' : `<input class="input light" value="${escapeAttr(p.title||'')}" placeholder="Title">`}
+        <textarea class="input light ta" placeholder="${isQuote ? 'Quote text…' : 'Text…'}">${escapeHtml(p.text||'')}</textarea>
+        <label class="fav-row"><input type="checkbox" class="favChk" ${p.favorite ? 'checked' : ''}> <span>Favourite</span></label>
+        <div class="row space">
+          <button class="btn" data-cancel>Cancel</button>
+          <div class="row" style="gap:.5rem">
+            <button class="btn danger" data-delete>Delete</button>
+            <button class="btn acc" data-save>Save</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const titleEl = itemEl.querySelector('input');
+    const textEl  = itemEl.querySelector('textarea');
+    const favChk  = itemEl.querySelector('.favChk');
+    const saveBtn = itemEl.querySelector('[data-save]');
+    const cancelBtn = itemEl.querySelector('[data-cancel]');
+    const delBtn = itemEl.querySelector('[data-delete]');
+
+    (titleEl || textEl).focus();
+
+    [saveBtn, cancelBtn, delBtn].forEach(b => solidTapTarget(b, [elFilter(titleEl), elFilter(textEl)]));
+
+    saveBtn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const newTitle = isQuote ? (p.title||'') : (titleEl?.value || '').trim();
+      const newText  = (textEl?.value || '').trim();
+      const fav      = !!favChk?.checked;
+      if (!newText) return;
+      await savePiece(id, { title:newTitle, text:newText, favorite:fav });
+      await refresh();
+    });
+
+    cancelBtn.addEventListener('click', async (e)=>{ e.stopPropagation(); await refresh(); });
+
+    delBtn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      if (!confirm('Delete this entry?')) return;
+      await delPiece(id);
+      await refresh();
+    });
+
+    textEl?.addEventListener('keydown', async (e)=>{
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); saveBtn.click(); }
+      if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click(); }
+    });
+    titleEl?.addEventListener('keydown', async (e)=>{
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); saveBtn.click(); }
+      if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click(); }
+    });
+  }
+  function elFilter(x){ return x || { blur(){} }; }
+
+  await refresh();
 }
 
 /** Long-press with short-tap fallback. */
@@ -325,53 +475,7 @@ function addLongPress(el, onLongPress, onShortTap) {
 }
 function getPoint(e){ return { x: e.clientX ?? (e.touches?.[0]?.clientX||0), y: e.clientY ?? (e.touches?.[0]?.clientY||0) }; }
 
-async function renderPieces(authorId) {
-  const author = await getAuthor(authorId);
-  if (!author) return renderHome();
-  const searchId = 'search-piece';
-  app.innerHTML = `
-    <div class="card">
-      <div class="row space">
-        <h2>${escapeHtml(author.name)}</h2>
-        <button class="btn" onclick="goto('#/authors/${encodeURIComponent(author.category)}')">Back</button>
-      </div>
-      <input id="${searchId}" class="input search" placeholder="Search texts…" />
-      <div id="pieces" class="list"></div>
-      <div class="group" style="margin-top:10px">
-        <input id="newTitle" class="input" placeholder="Title (optional)" />
-        <textarea id="newText" placeholder="Write text here…"></textarea>
-        <button class="btn acc" id="addPieceBtn">Add text</button>
-      </div>
-    </div>
-  `;
-  const cont = $('#pieces');
-  async function refresh() {
-    const items = await listPieces(authorId, $(`#${searchId}`).value.trim());
-    cont.innerHTML = items.length ? items.map(p => (
-      `<div class="item">
-        <div>
-          <div class="title">${escapeHtml(p.title || 'Untitled')}</div>
-          <div class="small muted">${new Date(p.createdAt).toLocaleDateString()}</div>
-        </div>
-        <div class="row">
-          <button class="btn" onclick="goto('#/piece/${p.id}')">Open</button>
-          <button class="btn" onclick="delPieceAndRefresh(${p.id})">Delete</button>
-        </div>
-      </div>`)).join('')
-      : `<div class="muted">No texts yet.</div>`;
-  }
-  await refresh();
-  $(`#${searchId}`).addEventListener('input', refresh);
-  $('#addPieceBtn').addEventListener('click', async ()=>{
-    const title = $('#newTitle').value.trim();
-    const text = $('#newText').value.trim();
-    if (!text) return;
-    await addPiece(authorId, title, text);
-    $('#newTitle').value=''; $('#newText').value='';
-    await refresh();
-  });
-}
-
+// Legacy detail view kept (linked from short tap)
 async function renderPieceDetail(id) {
   const p = await getPiece(id);
   if (!p) return renderHome();
@@ -384,6 +488,7 @@ async function renderPieceDetail(id) {
       </div>
       <input id="title" class="input" value="${escapeAttr(p.title||'')}" placeholder="Title (optional)">
       <textarea id="text">${escapeHtml(p.text)}</textarea>
+      <label class="fav-row"><input type="checkbox" id="favChk"> <span>Favourite</span></label>
       <div class="row space">
         <div class="muted small">Saved: <span id="savedAt">${new Date(p.createdAt).toLocaleString()}</span></div>
         <div class="row" style="gap:.5rem">
@@ -393,8 +498,9 @@ async function renderPieceDetail(id) {
       </div>
     </div>
   `;
+  $('#favChk').checked = !!p.favorite;
   $('#saveBtn').addEventListener('click', async ()=>{
-    await savePiece(id, { title: $('#title').value, text: $('#text').value });
+    await savePiece(id, { title: $('#title').value, text: $('#text').value, favorite: $('#favChk').checked });
     $('#savedAt').textContent = new Date().toLocaleString();
   });
   $('#shareBtn').addEventListener('click', async ()=>{
@@ -403,8 +509,6 @@ async function renderPieceDetail(id) {
     else { alert('Sharing not supported in this browser.'); }
   });
 }
-
-async function delPieceAndRefresh(id) { await delPiece(id); route(); }
 
 // ---------- Helpers ----------
 function escapeHtml(s=''){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }

@@ -10,7 +10,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system
 .hidden{display:none}
 main#app{padding:16px 16px 88px}
 
-/* Cards (for pieces/detail) */
+/* Cards (kept for legacy detail view) */
 .card{background:var(--card);border:1px solid #2a2d33;border-radius:14px;padding:14px;margin:10px 0}
 .row{display:flex;align-items:center;gap:.75rem}
 .row.space{justify-content:space-between}
@@ -28,7 +28,7 @@ main#app{padding:16px 16px 88px}
   -webkit-user-select: none;
   user-select: none;
   position: relative;
-  z-index: 1;                /* sit above nearby inputs */
+  z-index: 1;
 }
 .btn.acc{background:var(--acc);border-color:#5ec875;color:#06150d}
 .btn.danger{background:#ffdddd;border-color:#c0392b;color:#a40000}
@@ -46,6 +46,9 @@ main#app{padding:16px 16px 88px}
 }
 .input.light{background:#fff;border:1px solid #b7c2d0;color:#000}
 textarea{min-height:180px;resize:vertical}
+
+/* Light helper for small textareas used inline/modal */
+.ta{ min-height:120px; resize:vertical; }
 
 h2{font-size:1rem;margin:0 0 .5rem}
 .muted{color:var(--muted)}
@@ -76,7 +79,7 @@ h2{font-size:1rem;margin:0 0 .5rem}
 .author-item{ width:100%; }
 .author-btn{ display:block; width:100%; min-height:64px; font-size:1.6em; padding:11px 14px; text-align:center; }
 
-/* Inline edit */
+/* Inline author edit */
 .author-edit{
   display:flex; flex-direction:column; gap:12px;
   background:#f8f9fb; border:1px solid #d9e0ea; border-radius:12px; padding:12px;
@@ -84,12 +87,41 @@ h2{font-size:1rem;margin:0 0 .5rem}
 }
 .author-edit .edit-actions .btn{ min-height:48px; }
 
-/* FAB */
+/* ===== Pieces page (poems/quotes) ===== */
+.pieces-page {}
+.pieces-header h2{ margin:0 0 8px; }
+.pieces-grid{ display:grid; gap:16px; grid-template-columns:1fr; padding:8px 0 4px; }
+.piece-item{ width:100%; }
+.piece-btn{ display:block; width:100%; min-height:64px; font-size:1.2em; padding:12px 14px; text-align:left; }
+
+/* Inline piece edit */
+.piece-edit{
+  display:flex; flex-direction:column; gap:12px;
+  background:#f8f9fb; border:1px solid #d9e0ea; border-radius:12px; padding:12px;
+}
+.fav-row{ display:inline-flex; gap:8px; align-items:center; font-size:.95rem; }
+
+/* Floating action button (+) */
 .fab{
   position:fixed; right:20px; bottom:88px; width:56px; height:56px; border-radius:50%;
   background:navy; color:#fff; border:2px solid navy; font-size:1.8rem; line-height:1;
   display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,.25); z-index:10;
 }
+
+/* Modal (re-introduced for Pieces add) */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.4);
+  display:flex; align-items:center; justify-content:center;
+  z-index:1000;
+}
+.modal{
+  width:min(92vw, 480px);
+  background:#fff; color:#000;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 12px 28px rgba(0,0,0,.35);
+}
+.modal-title{ margin:0 0 10px; font-size:1.1rem; }
 
 /* Toast */
 .toast{
