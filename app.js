@@ -520,9 +520,12 @@ async function renderReadPiece(id) {
     const cs = getComputedStyle(readEl);
     const padLeft = parseFloat(cs.paddingLeft) || 0;
     const padRight = parseFloat(cs.paddingRight) || 0;
-    const target = Math.max(10, readEl.clientWidth - padLeft - padRight);
 
-    // Create a hidden measuring element with identical typography
+    // True inner content width with small safety margin for iOS rounding
+    const inner = Math.max(10, readEl.clientWidth - padLeft - padRight - 2); // -2px fudge
+    const target = inner * 0.965; // 3.5% margin to ensure no spill on the right
+
+    // Hidden DOM ruler with identical typography for precise measurement
     const meas = document.createElement('div');
     meas.style.position = 'absolute';
     meas.style.visibility = 'hidden';
@@ -545,14 +548,17 @@ async function renderReadPiece(id) {
     }
     document.body.removeChild(meas);
 
-    // scale from base 16px
+    // scale from base 16px with clamping
     let proposed = Math.floor((target / longestWidth) * 16);
-    proposed = Math.max(14, Math.min(40, proposed)); // clamp
+    proposed = Math.max(14, Math.min(40, proposed));
     readEl.style.fontSize = `${proposed}px`;
   }
 
   autoScale();
+  // resize + a delayed recalculation (accounts for iOS URL bar hide/show)
   window.addEventListener('resize', autoScale, { passive: true });
+  setTimeout(autoScale, 50);
+  setTimeout(autoScale, 300);
 }
 
 // ---------- Helpers ----------
