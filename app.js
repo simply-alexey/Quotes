@@ -182,7 +182,7 @@ function route() {
   if (first === 'home') renderHome();
   else if (first === 'authors') renderAuthors(decodeURIComponent(second||'Poems'));
   else if (first === 'pieces') renderPieces(Number(second));
-  else if (first === 'piece') renderPieceDetail(Number(second)); // kept for deep links
+  else if (first === 'piece') renderReadPiece(Number(second)); // <-- read view
   else renderHome();
 }
 
@@ -368,7 +368,6 @@ async function renderPieces(authorId) {
   }
   function closeModal() {
     pieceModal.classList.add('hidden');
-    // Clear & blur to fully dismiss keyboard/zoom state
     document.activeElement?.blur?.();
     const t = $('#pmTitle'); const x = $('#pmText'); const f = $('#pmFav');
     if (t) t.value = '';
@@ -382,12 +381,13 @@ async function renderPieces(authorId) {
   $('#pmCancel').addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeModal(); });
   $('#pmAdd').addEventListener('click', async (e)=>{
     e.preventDefault(); e.stopPropagation();
-    const title = isQuoteMode ? '' : ($('#pmTitle')?.value || '').trim();
+    const isQuoteModeLocal = (author.category === 'Quotes');
+    const title = isQuoteModeLocal ? '' : ($('#pmTitle')?.value || '').trim();
     const text  = ($('#pmText')?.value || '').trim();
     const fav   = $('#pmFav')?.checked || false;
     if (!text) return;
     await addPiece(authorId, title, text, fav);
-    closeModal();         // <- close immediately after success
+    closeModal();
     await refresh();
   });
 
@@ -490,39 +490,58 @@ function addLongPress(el, onLongPress, onShortTap) {
 }
 function getPoint(e){ return { x: e.clientX ?? (e.touches?.[0]?.clientX||0), y: e.clientY ?? (e.touches?.[0]?.clientY||0) }; }
 
-// Legacy detail view kept (linked from short tap)
-async function renderPieceDetail(id) {
+/* ===== Read view (new) ===== */
+async function renderReadPiece(id) {
   const p = await getPiece(id);
   if (!p) return renderHome();
   const a = await getAuthor(p.authorId);
+  const isQuote = a?.category === 'Quotes';
+
   app.innerHTML = `
-    <div class="card">
-      <div class="row space">
-        <h2>${escapeHtml(a?.name || 'Text')}</h2>
-        <button class="btn" onclick="goto('#/pieces/${p.authorId}')">Back</button>
-      </div>
-      <input id="title" class="input" value="${escapeAttr(p.title||'')}" placeholder="Title (optional)">
-      <textarea id="text">${escapeHtml(p.text)}</textarea>
-      <label class="fav-row"><input type="checkbox" id="favChk"> <span>Favourite</span></label>
-      <div class="row space">
-        <div class="muted small">Saved: <span id="savedAt">${new Date(p.createdAt).toLocaleString()}</span></div>
-        <div class="row" style="gap:.5rem">
-          <button class="btn" id="shareBtn">Share</button>
-          <button class="btn acc" id="saveBtn">Save</button>
+    <div class="read-page">
+      <div class="row space read-header">
+        <div class="read-meta">
+          ${isQuote ? '' : `<div class="read-author">${escapeHtml(a?.name || '')}</div>
+                            <div class="read-title">${escapeHtml(p.title || 'Untitled')}</div>`}
         </div>
+        <button class="btn" id="backBtn">Back</button>
       </div>
+      <div id="readText" class="read-text"></div>
     </div>
   `;
-  $('#favChk').checked = !!p.favorite;
-  $('#saveBtn').addEventListener('click', async ()=>{
-    await savePiece(id, { title: $('#title').value, text: $('#text').value, favorite: $('#favChk').checked });
-    $('#savedAt').textContent = new Date().toLocaleString();
-  });
-  $('#shareBtn').addEventListener('click', async ()=>{
-    const data = { title: p.title || 'Text', text: $('#text').value };
-    if (navigator.share) { try { await navigator.share(data); } catch(e){} }
-    else { alert('Sharing not supported in this browser.'); }
-  });
+
+  $('#backBtn').addEventListener('click', () => goto(`#/pieces/${p.authorId}`));
+
+  const readEl = $('#readText');
+  // Preserve newlines; each line should fit on one row. We'll auto-scale font.
+  readEl.textContent = p.text || '';
+
+  function autoScale() {
+    const lines = (p.text || '').split('\n');
+    const pad = 24; // match padding in CSS
+    const avail = Math.max(10, readEl.clientWidth - pad * 2);
+
+    // measure longest line at 16px, then scale
+    const longest = lines.reduce((m, s) => s.length > m.length ? s : m, '');
+    const size = computeFontSize(longest, avail, getComputedStyle(readEl).fontFamily, getComputedStyle(readEl).fontWeight);
+    readEl.style.fontSize = `${size}px`;
+  }
+
+  function computeFontSize(sample, targetWidth, fontFamily, fontWeight='400') {
+    const text = sample || ' ';
+    const base = 16; // px
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.font = `${fontWeight} ${base}px ${fontFamily || 'system-ui'}`;
+    const w = ctx.measureText(text).width || 1;
+    let proposed = Math.floor((targetWidth / w) * base);
+    // clamp to sensible bounds
+    proposed = Math.max(14, Math.min(40, proposed));
+    return proposed;
+  }
+
+  autoScale();
+  window.addEventListener('resize', autoScale, { passive: true });
 }
 
 // ---------- Helpers ----------
