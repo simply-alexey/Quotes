@@ -182,7 +182,7 @@ function route() {
   if (first === 'home') renderHome();
   else if (first === 'authors') renderAuthors(decodeURIComponent(second||'Poems'));
   else if (first === 'pieces') renderPieces(Number(second));
-  else if (first === 'piece') renderReadPiece(Number(second)); // <-- read view
+  else if (first === 'piece') renderReadPiece(Number(second)); // read view
   else renderHome();
 }
 
@@ -513,31 +513,42 @@ async function renderReadPiece(id) {
   $('#backBtn').addEventListener('click', () => goto(`#/pieces/${p.authorId}`));
 
   const readEl = $('#readText');
-  // Preserve newlines; each line should fit on one row. We'll auto-scale font.
   readEl.textContent = p.text || '';
 
+  // --- Accurate auto-scale so each line fits without horizontal overflow
   function autoScale() {
+    const cs = getComputedStyle(readEl);
+    const padLeft = parseFloat(cs.paddingLeft) || 0;
+    const padRight = parseFloat(cs.paddingRight) || 0;
+    const target = Math.max(10, readEl.clientWidth - padLeft - padRight);
+
+    // Create a hidden measuring element with identical typography
+    const meas = document.createElement('div');
+    meas.style.position = 'absolute';
+    meas.style.visibility = 'hidden';
+    meas.style.whiteSpace = 'pre';
+    meas.style.fontFamily = cs.fontFamily;
+    meas.style.fontWeight = cs.fontWeight;
+    meas.style.letterSpacing = cs.letterSpacing;
+    meas.style.padding = '0';
+    meas.style.margin = '0';
+    meas.style.lineHeight = cs.lineHeight;
+    meas.style.fontSize = '16px'; // base for proportional scaling
+    document.body.appendChild(meas);
+
     const lines = (p.text || '').split('\n');
-    const pad = 24; // match padding in CSS
-    const avail = Math.max(10, readEl.clientWidth - pad * 2);
+    let longestWidth = 1;
+    for (const line of lines.length ? lines : [' ']) {
+      meas.textContent = line || ' ';
+      const w = meas.scrollWidth;
+      if (w > longestWidth) longestWidth = w;
+    }
+    document.body.removeChild(meas);
 
-    // measure longest line at 16px, then scale
-    const longest = lines.reduce((m, s) => s.length > m.length ? s : m, '');
-    const size = computeFontSize(longest, avail, getComputedStyle(readEl).fontFamily, getComputedStyle(readEl).fontWeight);
-    readEl.style.fontSize = `${size}px`;
-  }
-
-  function computeFontSize(sample, targetWidth, fontFamily, fontWeight='400') {
-    const text = sample || ' ';
-    const base = 16; // px
-    const c = document.createElement('canvas');
-    const ctx = c.getContext('2d');
-    ctx.font = `${fontWeight} ${base}px ${fontFamily || 'system-ui'}`;
-    const w = ctx.measureText(text).width || 1;
-    let proposed = Math.floor((targetWidth / w) * base);
-    // clamp to sensible bounds
-    proposed = Math.max(14, Math.min(40, proposed));
-    return proposed;
+    // scale from base 16px
+    let proposed = Math.floor((target / longestWidth) * 16);
+    proposed = Math.max(14, Math.min(40, proposed)); // clamp
+    readEl.style.fontSize = `${proposed}px`;
   }
 
   autoScale();
