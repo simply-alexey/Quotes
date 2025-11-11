@@ -4,6 +4,7 @@
   --btn-border:#0b1d6b;
   --btn-text:#000;
   --acc:#0b1d6b;
+  --edge-gap:8px;                   /* ≈ 2 mm side gap on phones */
 }
 
 /* Base layout */
@@ -12,9 +13,9 @@ html,body{height:100%}
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  background:#eee;                    /* light grey app background */
+  background:#eee;                  /* light grey app background */
   color:#000;
-  overflow-x:hidden;                   /* never allow horizontal scrolling */
+  overflow-x:hidden;                /* never allow horizontal scrolling */
 }
 
 /* Top bar */
@@ -33,11 +34,17 @@ body{
   border-radius:16px;
   font-weight:700;
   padding:14px 18px;
-  font-size:2.0em;                     /* home size; others override */
+  font-size:2.0em;                  /* home size; other contexts override */
   display:inline-flex;align-items:center;justify-content:center;
 }
 .btn.acc{background:#8ee08e;border-color:#4aa24a}
 .btn.danger{background:#ffb3b3;border-color:#bb2e2e}
+
+/* Compact back button size */
+.btn.back{
+  font-size:1.2em;
+  padding:8px 14px;
+}
 
 /* Inputs */
 .input{
@@ -70,27 +77,49 @@ body{
   width:110px;                      /* equal width */
   height:44px;                      /* equal height */
   padding:0;                        /* size by width/height */
-  display:inline-flex;              /* align content centrally */
+  display:inline-flex;
   align-items:center;
   justify-content:center;
 }
 .import-label{cursor:pointer}
 
 /* ===== Home screen layout ===== */
-.home-categories{ display:grid; gap:16px; padding:16px; }
-.home-categories .btn{ font-size:2.0em; padding:14px 18px; }
+.home-categories{
+  display:grid; gap:16px;
+  padding:16px var(--edge-gap);     /* keep side gap on home too */
+}
+.home-categories .btn{ font-size:2.0em; padding:14px 18px; width:100%; }
 
 /* ===== Authors screen ===== */
+.authors-page{ padding:0 var(--edge-gap); }
 .authors-page h2{ margin:0 0 8px; }
-.authors-grid{ display:grid; gap:16px; grid-template-columns:1fr; padding:8px 0 4px; }
-.author-btn{ font-size:1.6em; padding:11px 14px; }
+.authors-grid{
+  display:grid; gap:16px; grid-template-columns:1fr;
+  padding:8px 0 4px;
+}
+.author-item{ width:100%; }
+.author-btn{
+  display:block; width:100%;
+  text-align:left;
+  font-size:1.6em; padding:11px 14px;
+}
 
-/* ===== Pieces list page ===== */
-.pieces-page {}
+/* ===== Pieces list page (Poet) ===== */
+.pieces-page{ padding:0 var(--edge-gap); }
+.pieces-header{ padding:0 0 6px; }          /* gives a small left breathing room */
 .pieces-header h2{ margin:0 0 8px; }
-.pieces-grid{ display:grid; gap:16px; grid-template-columns:1fr; padding:8px 0 4px; }
+.pieces-grid{
+  display:grid; gap:16px; grid-template-columns:1fr;
+  padding:8px 0 4px;
+}
 .piece-item{ width:100%; }
-.piece-btn{ display:block; width:100%; min-height:64px; font-size:1.2em; padding:12px 14px; text-align:left; }
+.piece-btn{
+  display:block; width:100%;
+  min-height:64px;
+  font-size:1.2em;
+  padding:12px 14px;
+  text-align:left;
+}
 
 /* Inline piece edit */
 .piece-edit{
@@ -100,8 +129,11 @@ body{
 .fav-row{ display:inline-flex; gap:8px; align-items:center; font-size:.95rem; }
 
 /* ===== Read (viewer) page ===== */
-.read-page{}
-.read-header{ margin:8px 16px 6px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.read-page{ padding:0 var(--edge-gap); }
+.read-header{
+  margin:8px 0 6px;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+}
 .read-author{ font-weight:700; margin:0 0 2px; }
 .read-title { font-weight:600; margin:0 0 6px; }
 
@@ -109,11 +141,11 @@ body{
 .read-text{
   background:transparent;
   color:#000;
-  padding:12px 20px 80px;            /* breathing room + room over footer */
-  white-space:pre;                   /* keep your manual line breaks */
+  padding:12px 0 80px;             /* side gaps come from page padding */
+  white-space:pre;                  /* keep manual line breaks */
   line-height:1.35;
-  font-size:20px;                    /* JS will auto-scale this */
-  overflow-x:hidden;                 /* prevent side scroll */
+  font-size:20px;                   /* JS will auto-scale this */
+  overflow-x:hidden;                /* prevent side scroll */
   max-width:100%;
   word-break:normal;
   overflow-wrap:normal;
@@ -123,7 +155,7 @@ body{
 .fab{
   position:fixed;
   right:20px;
-  bottom:88px;            /* sits above the bottom bar */
+  bottom:88px;                      /* sits above the bottom bar */
   width:56px;
   height:56px;
   border-radius:50%;
@@ -132,9 +164,7 @@ body{
   border:2px solid navy;
   font-size:1.8rem;
   line-height:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display:flex; align-items:center; justify-content:center;
   box-shadow:0 6px 16px rgba(0,0,0,.25);
   z-index:10;
 }

@@ -300,7 +300,7 @@ async function renderPieces(authorId) {
     <div class="pieces-page">
       <div class="row space pieces-header">
         <h2>${escapeHtml(author.name)}</h2>
-        <button class="btn" id="backBtn">Back</button>
+        <button class="btn back" id="backBtn">Back</button>
       </div>
       <div id="pieces" class="pieces-grid"></div>
       <button id="fabAddPiece" class="fab" aria-label="Add ${isQuoteMode ? 'quote' : 'poem'}">+</button>
@@ -499,7 +499,7 @@ async function renderReadPiece(id) {
           ${isQuote ? '' : `<div class="read-author">${escapeHtml(a?.name || '')}</div>
                             <div class="read-title">${escapeHtml(p.title || 'Untitled')}</div>`}
         </div>
-        <button class="btn" id="backBtn">Back</button>
+        <button class="btn back" id="backBtn">Back</button>
       </div>
       <div id="readText" class="read-text"></div>
     </div>
@@ -512,15 +512,13 @@ async function renderReadPiece(id) {
 
   // Robust auto-sizer: guarantees the widest line fits inside the container
   function autoScale() {
-    const containerWidth = readEl.getBoundingClientRect().width; // padding included
+    const containerWidth = readEl.getBoundingClientRect().width;
     if (!containerWidth) return;
 
-    // Allow smaller minimum in case of very long lines
-    let lo = 10, hi = 40, best = lo;     // <- lo dropped from 14 to 10
-    // quick try at max
+    let lo = 10, hi = 46, best = lo; // allow a bit larger than before
     readEl.style.fontSize = `${hi}px`;
-    const margin = 0.98;                 // 2% safety margin
-    const fudge = 1.5;                   // px cushion
+    const margin = 0.98;             // keep ~2% headroom
+    const fudge = 1.5;               // px cushion
 
     if (readEl.scrollWidth <= containerWidth * margin - fudge) {
       best = hi;
@@ -537,7 +535,6 @@ async function renderReadPiece(id) {
 
   autoScale();
   window.addEventListener('resize', autoScale, { passive: true });
-  // Re-run after iOS bars settle
   setTimeout(autoScale, 50);
   setTimeout(autoScale, 300);
 }
