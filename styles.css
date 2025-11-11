@@ -121,12 +121,30 @@ body{
   text-align:left;
 }
 
-/* Inline piece edit */
-.piece-edit{
+/* Inline piece edit and author edit */
+.piece-edit,
+.author-edit{
   display:flex; flex-direction:column; gap:12px;
   background:#f8f9fb; border:1px solid #d9e0ea; border-radius:12px; padding:12px;
 }
+.piece-edit .btn,
+.author-edit .btn{
+  font-size:1rem;           /* smaller font for edit buttons */
+  padding:10px 12px;        /* compact padding */
+  min-width:70px;           /* minimum width to fit text */
+}
 .fav-row{ display:inline-flex; gap:8px; align-items:center; font-size:.95rem; }
+
+/* Edit actions row with proper spacing */
+.edit-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+}
+.edit-actions .row{
+  gap:8px;  /* smaller gap between delete and save */
+}
 
 /* ===== Read (viewer) page ===== */
 .read-page{ padding:0 7.5px; }     /* 2mm ≈ 7.5px margin on each side */
