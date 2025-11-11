@@ -129,7 +129,7 @@ body{
 .fav-row{ display:inline-flex; gap:8px; align-items:center; font-size:.95rem; }
 
 /* ===== Read (viewer) page ===== */
-.read-page{ padding:0 var(--edge-gap); }
+.read-page{ padding:0 7.5px; }     /* 2mm ≈ 7.5px margin on each side */
 .read-header{
   margin:8px 0 6px;
   display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
@@ -146,7 +146,9 @@ body{
   line-height:1.35;
   font-size:20px;                   /* JS will auto-scale this */
   overflow-x:hidden;                /* prevent side scroll */
+  overflow-y:hidden;                /* prevent vertical scroll during measurement */
   max-width:100%;
+  width:100%;                       /* ensure full width for measurement */
   word-break:normal;
   overflow-wrap:normal;
 }
