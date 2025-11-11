@@ -401,7 +401,7 @@ async function renderPieces(authorId) {
     itemEl.innerHTML = `
       <div class="piece-edit">
         ${isQuote ? '' : `<input class="input light" value="${escapeAttr(p.title||'')}" placeholder="Title">`}
-        <textarea class="input light ta" placeholder="${isQuote ? 'Quote text…' : 'Write text here…'}">${escapeHtml(p.text||'')}</textarea>
+        <textarea class="input light ta" placeholder="${isQuote ? 'Quote text…' : 'Text…'}">${escapeHtml(p.text||'')}</textarea>
         <label class="fav-row"><input type="checkbox" ${p.favorite?'checked':''}> <span>Favourite</span></label>
         <div class="row space">
           <button class="btn" data-cancel>Cancel</button>
@@ -510,31 +510,49 @@ async function renderReadPiece(id) {
   const readEl = $('#readText');
   readEl.textContent = p.text || '';
 
-  // Robust auto-sizer: guarantees the widest line fits inside the container
+  // ===== Max-fit autosize (grow, then binary search back to perfect fit) =====
   function autoScale() {
     const containerWidth = readEl.getBoundingClientRect().width;
     if (!containerWidth) return;
 
-    let lo = 10, hi = 46, best = lo; // allow a bit larger than before
-    readEl.style.fontSize = `${hi}px`;
-    const margin = 0.98;             // keep ~2% headroom
-    const fudge = 1.5;               // px cushion
+    const margin = 0.992;   // ~0.8% headroom so it visually “touches” but never clips
+    const fudge  = 0.5;     // px cushion for Safari rounding
 
-    if (readEl.scrollWidth <= containerWidth * margin - fudge) {
-      best = hi;
+    // Helper to test if current font size fits
+    const fits = () => readEl.scrollWidth <= containerWidth * margin - fudge;
+
+    // 1) Grow quickly until it *doesn't* fit (exponential search)
+    let size = 16;          // start from a reasonable default
+    readEl.style.fontSize = `${size}px`;
+    while (size < 96 && fits()) {
+      size = Math.min(96, Math.floor(size * 1.15) + 1);
+      readEl.style.fontSize = `${size}px`;
+    }
+
+    // Now we have: either (a) it already failed at current size, or (b) capped at 96 and fits.
+    // Determine bounds for binary search.
+    let hi = size, lo;
+    if (!fits()) {
+      // current size is too big; step one back for lo
+      lo = Math.max(10, Math.floor(size / 1.15));
     } else {
-      while (lo <= hi) {
-        const mid = Math.floor((lo + hi) / 2);
-        readEl.style.fontSize = `${mid}px`;
-        const fits = readEl.scrollWidth <= containerWidth * margin - fudge;
-        if (fits) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
-      }
+      // we hit the cap and still fit; this is already best
+      return;
+    }
+
+    // 2) Binary search between lo (fits) and hi (fails) for the maximal fitting size
+    let best = lo;
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      readEl.style.fontSize = `${mid}px`;
+      if (fits()) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
     }
     readEl.style.fontSize = `${best}px`;
   }
 
   autoScale();
   window.addEventListener('resize', autoScale, { passive: true });
+  // Re-run after iOS bars settle
   setTimeout(autoScale, 50);
   setTimeout(autoScale, 300);
 }
