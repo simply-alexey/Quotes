@@ -18,12 +18,13 @@ body{
   overflow-x:hidden;                /* never allow horizontal scrolling */
 }
 
-/* Top bar */
+/* Top bar: show only on Home */
 .topbar{
   position:sticky;top:0;z-index:5;
   background:#f8f8f8;border-bottom:1px solid #ddd;
-  padding:10px 16px;display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;display:none;align-items:center;justify-content:space-between;
 }
+.home .topbar{ display:flex; }      /* title visible only on home */
 .topbar h1{font-size:1.6rem;margin:0}
 
 /* Generic button */
@@ -106,7 +107,7 @@ body{
 
 /* ===== Pieces list page (Poet) ===== */
 .pieces-page{ padding:0 var(--edge-gap); }
-.pieces-header{ padding:0 0 6px; }          /* gives a small left breathing room */
+.pieces-header{ padding:0 0 6px; }  /* small breathing room on the left */
 .pieces-header h2{ margin:0 0 8px; }
 .pieces-grid{
   display:grid; gap:16px; grid-template-columns:1fr;
@@ -129,9 +130,9 @@ body{
 }
 .piece-edit .btn,
 .author-edit .btn{
-  font-size:1rem;           /* smaller font for edit buttons */
-  padding:10px 12px;        /* compact padding */
-  min-width:70px;           /* minimum width to fit text */
+  font-size:1rem;           /* compact like your long-press edit dialog */
+  padding:10px 12px;
+  min-width:70px;
 }
 .fav-row{ display:inline-flex; gap:8px; align-items:center; font-size:.95rem; }
 
@@ -142,12 +143,10 @@ body{
   align-items:center;
   gap:8px;
 }
-.edit-actions .row{
-  gap:8px;  /* smaller gap between delete and save */
-}
+.edit-actions .row{ gap:8px; }
 
 /* ===== Read (viewer) page ===== */
-.read-page{ padding:0 7.5px; }     /* 2mm ≈ 7.5px margin on each side */
+.read-page{ padding:0 7.5px; }     /* ~2 mm side gap on each side */
 .read-header{
   margin:8px 0 6px;
   display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
@@ -166,7 +165,7 @@ body{
   overflow-x:hidden;                /* prevent side scroll */
   overflow-y:hidden;                /* prevent vertical scroll during measurement */
   max-width:100%;
-  width:100%;                       /* ensure full width for measurement */
+  width:100%;
   word-break:normal;
   overflow-wrap:normal;
 }
@@ -194,6 +193,13 @@ body{
 .modal{ width:min(92vw,480px); background:#fff; color:#000; border-radius:14px; padding:16px; box-shadow:0 12px 28px rgba(0,0,0,.35); }
 .modal-title{ margin:0 0 10px; font-size:1.1rem; }
 .modal-backdrop.hidden{ display:none !important; }
+
+/* Make Cancel/Add in the modal the same compact size as edit/delete */
+.modal .btn{
+  font-size:1rem;
+  padding:10px 12px;
+  min-width:70px;
+}
 
 /* Toast */
 .toast{
