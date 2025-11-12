@@ -56,7 +56,11 @@ body{
   font-size:1rem;
 }
 .input.ta{min-height:120px;resize:vertical}
-.input.light{background:#eaeef3;color:#000}
+.input.light{
+  background:#f5f9ff;              /* lighter to separate from dialog bg */
+  color:#000;
+  border:2px solid var(--btn-bg);  /* light-blue frame per request */
+}
 
 /* Bottom bar and its buttons */
 .bottombar{
@@ -190,9 +194,26 @@ body{
 
 /* Modal for adding pieces */
 .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:1000; }
-.modal{ width:min(92vw,480px); background:#fff; color:#000; border-radius:14px; padding:16px; box-shadow:0 12px 28px rgba(0,0,0,.35); }
-.modal-title{ margin:0 0 10px; font-size:1.1rem; }
+
+/* >>> Updated to be ~80% of screen height and flexy layout <<< */
+.modal{
+  width:min(92vw,480px);
+  height:80vh;                      /* 80% of the screen height */
+  background:#fff; color:#000;
+  border-radius:14px; padding:16px;
+  box-shadow:0 12px 28px rgba(0,0,0,.35);
+  display:flex; flex-direction:column; gap:12px;
+  overflow:auto;                    /* scroll if content is taller */
+}
+.modal-title{ margin:0 0 4px; font-size:1.1rem; }
 .modal-backdrop.hidden{ display:none !important; }
+
+/* Make textarea grow to fill available vertical space in the big modal */
+.modal .ta{
+  flex:1 1 auto;
+  min-height:0;                     /* allow flex to control height */
+  resize:vertical;
+}
 
 /* Make Cancel/Add in the modal the same compact size as edit/delete */
 .modal .btn{
