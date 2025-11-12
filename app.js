@@ -194,14 +194,21 @@ function renderHome() {
   `;
 }
 
+/* ===== Authors list for category ===== */
 async function renderAuthors(category) {
   app.innerHTML = `
     <div class="authors-page">
-      <h2>${category}</h2>
+      <div class="pieces-header">
+        <h2>${category}</h2>
+        <button class="btn back" id="backBtn">Back</button>
+      </div>
       <div id="authors" class="authors-grid"></div>
       <button id="fabAddAuthor" class="fab" aria-label="Add author">+</button>
     </div>
   `;
+
+  // Back from category to Home
+  $('#backBtn').addEventListener('click', () => goto('#/home'));
 
   if (!localStorage.getItem('pv_hint_author_edit_shown')) {
     showToast('Tip: hold an author to rename or delete', 2800);
@@ -298,7 +305,7 @@ async function renderPieces(authorId) {
 
   app.innerHTML = `
     <div class="pieces-page">
-      <div class="row space pieces-header">
+      <div class="pieces-header">
         <h2>${escapeHtml(author.name)}</h2>
         <button class="btn back" id="backBtn">Back</button>
       </div>
@@ -494,7 +501,7 @@ async function renderReadPiece(id) {
 
   app.innerHTML = `
     <div class="read-page">
-      <div class="row space read-header">
+      <div class="read-header">
         <div class="read-meta">
           ${isQuote ? '' : `<div class="read-author">${escapeHtml(a?.name || '')}</div>
                             <div class="read-title">${escapeHtml(p.title || 'Untitled')}</div>`}
@@ -520,33 +527,18 @@ async function renderReadPiece(id) {
     let hi = 200;  // maximum font size to search
     let best = lo;
 
-    // Helper to check if text fits at current font size
-    const fits = () => {
-      // Force a reflow to get accurate measurements
-      readEl.offsetHeight;
-      return readEl.scrollWidth <= containerWidth;
-    };
+    const fits = () => { readEl.offsetHeight; return readEl.scrollWidth <= containerWidth; };
 
-    // Binary search for optimal size
     while (lo <= hi) {
       const mid = Math.floor((lo + hi) / 2);
       readEl.style.fontSize = `${mid}px`;
-      
-      if (fits()) {
-        best = mid;
-        lo = mid + 1;  // try larger
-      } else {
-        hi = mid - 1;  // too big, try smaller
-      }
+      if (fits()) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
     }
-
-    // Set the final size
     readEl.style.fontSize = `${best}px`;
   }
 
   autoScale();
   window.addEventListener('resize', autoScale, { passive: true });
-  // Re-run after iOS bars settle
   setTimeout(autoScale, 50);
   setTimeout(autoScale, 300);
 }
