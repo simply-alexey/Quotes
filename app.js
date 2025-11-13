@@ -182,7 +182,8 @@ function route() {
   if (first === 'home') renderHome();
   else if (first === 'authors') renderAuthors(decodeURIComponent(second||'Poems'));
   else if (first === 'pieces') renderPieces(Number(second));
-  else if (first === 'piece') renderReadPiece(Number(second)); // read view
+  else if (first === 'piece') renderReadPiece(Number(second));
+  else if (first === 'memorise') renderMemorisePiece(Number(second));
   else renderHome();
 }
 
@@ -503,12 +504,19 @@ async function renderReadPiece(id) {
     <div class="read-page">
       <div class="read-header">
         <div class="read-meta">
-          ${isQuote ? '' : `<div class="read-author">${escapeHtml(a?.name || '')}</div>
-                            <div class="read-title">${escapeHtml(p.title || 'Untitled')}</div>`}
+          ${isQuote ? '' : `
+            <div class="read-author">${escapeHtml(a?.name || '')}</div>
+            <div class="read-title">${escapeHtml(p.title || 'Untitled')}</div>
+          `}
         </div>
         <button class="btn back" id="backBtn">Back</button>
       </div>
       <div id="readText" class="read-text"></div>
+      ${isQuote ? '' : `
+        <div class="mem-cta">
+          <button class="btn mem-open" id="memOpenBtn" type="button">Memorise this poem</button>
+        </div>
+      `}
     </div>
   `;
 
@@ -517,22 +525,32 @@ async function renderReadPiece(id) {
   const readEl = $('#readText');
   readEl.textContent = p.text || '';
 
-  // ===== Max-fit autosize to fill width perfectly =====
+  if (!isQuote) {
+    $('#memOpenBtn')?.addEventListener('click', () => goto(`#/memorise/${p.id}`));
+  }
+
   function autoScale() {
     const containerWidth = readEl.getBoundingClientRect().width;
     if (!containerWidth) return;
 
-    // Binary search for the largest font size that fits without horizontal overflow
-    let lo = 10;   // minimum font size
-    let hi = 200;  // maximum font size to search
+    let lo = 10;
+    let hi = 200;
     let best = lo;
 
-    const fits = () => { readEl.offsetHeight; return readEl.scrollWidth <= containerWidth; };
+    const fits = () => {
+      readEl.offsetHeight;
+      return readEl.scrollWidth <= containerWidth;
+    };
 
     while (lo <= hi) {
       const mid = Math.floor((lo + hi) / 2);
       readEl.style.fontSize = `${mid}px`;
-      if (fits()) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
+      if (fits()) {
+        best = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
     }
     readEl.style.fontSize = `${best}px`;
   }
@@ -541,6 +559,108 @@ async function renderReadPiece(id) {
   window.addEventListener('resize', autoScale, { passive: true });
   setTimeout(autoScale, 50);
   setTimeout(autoScale, 300);
+}
+
+async function renderMemorisePiece(id) {
+  const p = await getPiece(id);
+  if (!p) return renderHome();
+  const a = await getAuthor(p.authorId);
+  const isQuote = a?.category === 'Quotes';
+
+  if (isQuote) {
+    goto(`#/piece/${id}`);
+    return;
+  }
+
+  app.innerHTML = `
+    <div class="mem-page">
+      <div class="mem-header">
+        <div class="mem-meta">
+          <div class="mem-author">${escapeHtml(a?.name || '')}</div>
+          <div class="mem-title">${escapeHtml(p.title || 'Untitled')}</div>
+        </div>
+        <button class="btn back" id="backBtn">Back</button>
+      </div>
+
+      <p class="mem-help">
+        Choose a mode, try to recall the next line or word, then tap “Next” to reveal it.
+      </p>
+
+      <div class="mem-panel">
+        <div class="mem-controls">
+          <button class="btn mem-btn" id="memLinesBtn" type="button">By lines</button>
+          <button class="btn mem-btn" id="memWordsBtn" type="button">By words</button>
+        </div>
+        <div id="memDisplay" class="mem-display">
+          Choose a mode to begin.
+        </div>
+        <button class="btn mem-next" id="memNextBtn" type="button" disabled>Next</button>
+      </div>
+    </div>
+  `;
+
+  $('#backBtn').addEventListener('click', () => goto(`#/piece/${id}`));
+
+  const fullText = p.text || '';
+  const lines = fullText
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(l => l.length);
+  const words = fullText
+    .split(/\s+/)
+    .map(w => w.trim())
+    .filter(w => w.length);
+
+  const display = $('#memDisplay');
+  const nextBtn = $('#memNextBtn');
+  const linesBtn = $('#memLinesBtn');
+  const wordsBtn = $('#memWordsBtn');
+
+  let mode = null;
+  let seq = [];
+  let idx = 0;
+
+  function start(newMode) {
+    mode = newMode;
+    seq = mode === 'lines' ? lines : words;
+    idx = 0;
+    display.textContent = '';
+    if (!seq.length) {
+      display.textContent = 'No text to memorise.';
+      nextBtn.textContent = 'Next';
+      nextBtn.disabled = true;
+    } else {
+      display.textContent = 'Tap “Next” to reveal the first ' + (mode === 'lines' ? 'line.' : 'word.');
+      nextBtn.textContent = 'Next';
+      nextBtn.disabled = false;
+    }
+  }
+
+  function showNext() {
+    if (!seq.length || !mode) return;
+
+    if (idx >= seq.length) {
+      start(mode);
+      return;
+    }
+
+    const unit = seq[idx++];
+    if (mode === 'lines') {
+      display.textContent += (display.textContent ? '\n' : '') + unit;
+    } else {
+      display.textContent += (display.textContent ? ' ' : '') + unit;
+    }
+
+    if (idx >= seq.length) {
+      nextBtn.textContent = 'Restart';
+    } else {
+      nextBtn.textContent = 'Next';
+    }
+  }
+
+  linesBtn.addEventListener('click', () => start('lines'));
+  wordsBtn.addEventListener('click', () => start('words'));
+  nextBtn.addEventListener('click', showNext);
 }
 
 // ---------- Helpers ----------

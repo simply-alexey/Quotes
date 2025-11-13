@@ -253,3 +253,84 @@ body{
 .row.space{justify-content:space-between}
 .muted{opacity:.65}
 .hidden{display:none}
+
+/* CTA under poem for memorise mode */
+.mem-cta{
+  margin:8px 0 88px;
+}
+.mem-open{
+  width:100%;
+  font-size:1.1rem;
+  padding:12px 14px;
+}
+
+/* ===== Separate Memorise screen ===== */
+.mem-page{
+  padding:0 var(--edge-gap) 90px;
+}
+
+.mem-header{
+  position:sticky;
+  top:0;
+  z-index:4;
+  background:var(--bg);
+  margin:8px 0 6px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  border-bottom:1px solid #dcdcdc;
+}
+.mem-author{
+  font-weight:700;
+  margin:0 0 2px;
+}
+.mem-title{
+  font-weight:600;
+  margin:0 0 6px;
+}
+
+.mem-help{
+  margin:10px 2px 8px;
+  font-size:.9rem;
+  opacity:.8;
+}
+
+.mem-panel{
+  margin-top:4px;
+  padding:12px;
+  border-radius:12px;
+  background:#f8f9fb;
+  border:1px solid #d9e0ea;
+}
+
+.mem-controls{
+  display:flex;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.mem-panel .mem-btn{
+  font-size:1rem;
+  padding:8px 10px;
+  min-width:0;
+}
+
+.mem-display{
+  min-height:80px;
+  padding:8px 6px;
+  background:#fff;
+  border-radius:8px;
+  border:1px dashed #c9cdd3;
+  white-space:pre-wrap;
+  line-height:1.4;
+  margin-bottom:8px;
+}
+
+.mem-next{
+  width:100%;
+  font-size:1.05rem;
+  padding:10px 12px;
+  background:#8ee08e;
+  border-color:#4aa24a;
+}
