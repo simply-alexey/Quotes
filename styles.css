@@ -4,7 +4,7 @@
   --btn-border:#0b1d6b;
   --btn-text:#000;
   --acc:#0b1d6b;
-  --edge-gap:8px;                   /* ≈ 2 mm side gap on phones */
+  --edge-gap:8px;
 }
 
 /* Base layout */
@@ -13,9 +13,9 @@ html,body{height:100%}
 body{
   margin:0;
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-  background:#eee;                  /* light grey app background */
+  background:#eee;
   color:#000;
-  overflow-x:hidden;                /* never allow horizontal scrolling */
+  overflow-x:hidden;
 }
 
 /* Top bar: show only on Home */
@@ -24,7 +24,7 @@ body{
   background:#f8f8f8;border-bottom:1px solid #ddd;
   padding:10px 16px;display:none;align-items:center;justify-content:space-between;
 }
-.home .topbar{ display:flex; }      /* title visible only on home */
+.home .topbar{ display:flex; }
 .topbar h1{font-size:1.6rem;margin:0}
 
 /* Generic button */
@@ -35,7 +35,7 @@ body{
   border-radius:16px;
   font-weight:700;
   padding:14px 18px;
-  font-size:2.0em;                  /* home size; other contexts override */
+  font-size:2.0em;
   display:inline-flex;align-items:center;justify-content:center;
 }
 .btn.acc{background:#8ee08e;border-color:#4aa24a}
@@ -57,9 +57,9 @@ body{
 }
 .input.ta{min-height:120px;resize:vertical}
 .input.light{
-  background:#f5f9ff;              /* lighter to separate from dialog bg */
+  background:#f5f9ff;
   color:#000;
-  border:2px solid var(--btn-bg);  /* light-blue frame per request */
+  border:2px solid var(--btn-bg);
 }
 
 /* Bottom bar and its buttons */
@@ -73,15 +73,15 @@ body{
 /* Make all three footer controls the same size with navy background */
 .bottombar button,
 .bottombar .import-label{
-  background:navy;                  /* navy background */
-  border:2px solid navy;            /* navy border */
-  color:#fff;                       /* white text */
+  background:navy;
+  border:2px solid navy;
+  color:#fff;
   border-radius:12px;
   font-weight:600;
   font-size:1rem;
-  width:110px;                      /* equal width */
-  height:44px;                      /* equal height */
-  padding:0;                        /* size by width/height */
+  width:110px;
+  height:44px;
+  padding:0;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -91,21 +91,21 @@ body{
 /* ===== Home screen layout ===== */
 .home-categories{
   display:grid; gap:16px;
-  padding:16px var(--edge-gap);     /* keep side gap on home too */
+  padding:16px var(--edge-gap);
 }
 .home-categories .btn{ font-size:2.0em; padding:14px 18px; width:100%; }
 
 /* ===== Authors screen ===== */
 .authors-page{ padding:0 var(--edge-gap); }
 
-/* >>> Sticky header with slight top offset to “lower” Back button <<< */
+/* Sticky header */
 .pieces-header{
   position:sticky;
   top:0;
   z-index:4;
   background:var(--bg);
-  margin:8px 0 6px;                 /* adds breathing room from top */
-  padding-top:2px;                  /* tiny extra offset */
+  margin:8px 0 6px;
+  padding-top:2px;
   display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
   border-bottom:1px solid #dcdcdc;
 }
@@ -126,7 +126,7 @@ body{
 .pieces-page{ padding:0 var(--edge-gap); }
 .pieces-grid{
   display:grid; gap:16px; grid-template-columns:1fr;
-  padding:8px 0 80px;               /* leave room above bottom bar */
+  padding:8px 0 80px;
 }
 .piece-item{ width:100%; }
 .piece-btn{
@@ -145,7 +145,7 @@ body{
 }
 .piece-edit .btn,
 .author-edit .btn{
-  font-size:1rem;           /* compact like your long-press edit dialog */
+  font-size:1rem;
   padding:10px 12px;
   min-width:70px;
 }
@@ -161,9 +161,9 @@ body{
 .edit-actions .row{ gap:8px; }
 
 /* ===== Read (viewer) page ===== */
-.read-page{ padding:0 7.5px; }     /* ~2 mm side gap on each side */
+.read-page{ padding:0 7.5px; }
 
-/* >>> Sticky read header so author/title/back always visible <<< */
+/* Sticky read header */
 .read-header{
   position:sticky;
   top:0;
@@ -180,23 +180,33 @@ body{
 .read-text{
   background:transparent;
   color:#000;
-  padding:12px 0 80px;             /* side gaps come from page padding */
-  white-space:pre;                  /* keep manual line breaks */
+  padding:12px 0 20px;
+  white-space:pre;
   line-height:1.35;
-  font-size:20px;                   /* JS will auto-scale this */
-  overflow-x:hidden;                /* prevent side scroll */
-  overflow-y:hidden;                /* prevent vertical scroll during measurement */
+  font-size:20px;
+  overflow-x:hidden;
+  overflow-y:hidden;
   max-width:100%;
   width:100%;
   word-break:normal;
   overflow-wrap:normal;
 }
 
+/* CTA under poem for memorise mode */
+.mem-cta{
+  margin:20px 0 88px;
+}
+.mem-open{
+  width:100%;
+  font-size:1.2rem;
+  padding:14px 16px;
+}
+
 /* Floating action button (+) */
 .fab{
   position:fixed;
   right:20px;
-  bottom:88px;                      /* sits above the bottom bar */
+  bottom:88px;
   width:56px;
   height:56px;
   border-radius:50%;
@@ -213,7 +223,6 @@ body{
 /* Modal for adding pieces */
 .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; z-index:1000; }
 
-/* >>> ~80% of screen height & flex layout <<< */
 .modal{
   width:min(92vw,480px);
   height:80vh;
@@ -229,7 +238,7 @@ body{
 /* Make textarea grow to fill available vertical space in the big modal */
 .modal .ta{
   flex:1 1 auto;
-  min-height:0;                     /* allow flex to control height */
+  min-height:0;
   resize:vertical;
 }
 
@@ -254,17 +263,7 @@ body{
 .muted{opacity:.65}
 .hidden{display:none}
 
-/* CTA under poem for memorise mode */
-.mem-cta{
-  margin:8px 0 88px;
-}
-.mem-open{
-  width:100%;
-  font-size:1.1rem;
-  padding:12px 14px;
-}
-
-/* ===== Separate Memorise screen ===== */
+/* ===== Memorise screen ===== */
 .mem-page{
   padding:0 var(--edge-gap) 90px;
 }
@@ -291,14 +290,14 @@ body{
 }
 
 .mem-help{
-  margin:10px 2px 8px;
+  margin:10px 2px 12px;
   font-size:.9rem;
   opacity:.8;
 }
 
 .mem-panel{
   margin-top:4px;
-  padding:12px;
+  padding:14px;
   border-radius:12px;
   background:#f8f9fb;
   border:1px solid #d9e0ea;
@@ -306,31 +305,41 @@ body{
 
 .mem-controls{
   display:flex;
-  gap:8px;
-  margin-bottom:8px;
+  gap:10px;
+  margin-bottom:12px;
 }
 
 .mem-panel .mem-btn{
-  font-size:1rem;
-  padding:8px 10px;
+  flex:1;
+  font-size:1.1rem;
+  padding:12px 10px;
   min-width:0;
 }
 
 .mem-display{
-  min-height:80px;
-  padding:8px 6px;
+  min-height:120px;
+  padding:12px 10px;
   background:#fff;
   border-radius:8px;
   border:1px dashed #c9cdd3;
   white-space:pre-wrap;
-  line-height:1.4;
-  margin-bottom:8px;
+  line-height:1.5;
+  margin-bottom:12px;
+  font-size:1rem;
 }
 
-.mem-next{
-  width:100%;
-  font-size:1.05rem;
-  padding:10px 12px;
-  background:#8ee08e;
-  border-color:#4aa24a;
+.mem-buttons{
+  display:flex;
+  gap:10px;
+}
+
+.mem-nav{
+  flex:1;
+  font-size:1.1rem;
+  padding:12px 10px;
+}
+
+.mem-nav:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
 }

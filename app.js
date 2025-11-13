@@ -208,7 +208,6 @@ async function renderAuthors(category) {
     </div>
   `;
 
-  // Back from category to Home
   $('#backBtn').addEventListener('click', () => goto('#/home'));
 
   if (!localStorage.getItem('pv_hint_author_edit_shown')) {
@@ -561,6 +560,7 @@ async function renderReadPiece(id) {
   setTimeout(autoScale, 300);
 }
 
+/* ===== Memorise screen ===== */
 async function renderMemorisePiece(id) {
   const p = await getPiece(id);
   if (!p) return renderHome();
@@ -583,7 +583,7 @@ async function renderMemorisePiece(id) {
       </div>
 
       <p class="mem-help">
-        Choose a mode, try to recall the next line or word, then tap “Next” to reveal it.
+        Choose a mode, then use "Next" to reveal and "Back" to hide text.
       </p>
 
       <div class="mem-panel">
@@ -594,7 +594,10 @@ async function renderMemorisePiece(id) {
         <div id="memDisplay" class="mem-display">
           Choose a mode to begin.
         </div>
-        <button class="btn mem-next" id="memNextBtn" type="button" disabled>Next</button>
+        <div class="mem-buttons">
+          <button class="btn mem-nav" id="memBackBtn" type="button" disabled>Back</button>
+          <button class="btn mem-nav" id="memNextBtn" type="button" disabled>Next</button>
+        </div>
       </div>
     </div>
   `;
@@ -613,6 +616,7 @@ async function renderMemorisePiece(id) {
 
   const display = $('#memDisplay');
   const nextBtn = $('#memNextBtn');
+  const backBtn = $('#memBackBtn');
   const linesBtn = $('#memLinesBtn');
   const wordsBtn = $('#memWordsBtn');
 
@@ -620,47 +624,56 @@ async function renderMemorisePiece(id) {
   let seq = [];
   let idx = 0;
 
+  function updateDisplay() {
+    if (!seq.length || !mode) {
+      display.textContent = 'Choose a mode to begin.';
+      return;
+    }
+
+    if (idx === 0) {
+      display.textContent = 'Tap "Next" to reveal the first ' + (mode === 'lines' ? 'line.' : 'word.');
+      return;
+    }
+
+    const revealed = seq.slice(0, idx);
+    if (mode === 'lines') {
+      display.textContent = revealed.join('\n');
+    } else {
+      display.textContent = revealed.join(' ');
+    }
+  }
+
+  function updateButtons() {
+    nextBtn.disabled = !seq.length || idx >= seq.length;
+    backBtn.disabled = idx === 0;
+  }
+
   function start(newMode) {
     mode = newMode;
     seq = mode === 'lines' ? lines : words;
     idx = 0;
-    display.textContent = '';
-    if (!seq.length) {
-      display.textContent = 'No text to memorise.';
-      nextBtn.textContent = 'Next';
-      nextBtn.disabled = true;
-    } else {
-      display.textContent = 'Tap “Next” to reveal the first ' + (mode === 'lines' ? 'line.' : 'word.');
-      nextBtn.textContent = 'Next';
-      nextBtn.disabled = false;
-    }
+    updateDisplay();
+    updateButtons();
   }
 
   function showNext() {
-    if (!seq.length || !mode) return;
+    if (!seq.length || !mode || idx >= seq.length) return;
+    idx++;
+    updateDisplay();
+    updateButtons();
+  }
 
-    if (idx >= seq.length) {
-      start(mode);
-      return;
-    }
-
-    const unit = seq[idx++];
-    if (mode === 'lines') {
-      display.textContent += (display.textContent ? '\n' : '') + unit;
-    } else {
-      display.textContent += (display.textContent ? ' ' : '') + unit;
-    }
-
-    if (idx >= seq.length) {
-      nextBtn.textContent = 'Restart';
-    } else {
-      nextBtn.textContent = 'Next';
-    }
+  function hideBack() {
+    if (idx === 0) return;
+    idx--;
+    updateDisplay();
+    updateButtons();
   }
 
   linesBtn.addEventListener('click', () => start('lines'));
   wordsBtn.addEventListener('click', () => start('words'));
   nextBtn.addEventListener('click', showNext);
+  backBtn.addEventListener('click', hideBack);
 }
 
 // ---------- Helpers ----------
