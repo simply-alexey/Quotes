@@ -208,6 +208,7 @@ async function renderAuthors(category) {
     </div>
   `;
 
+  // Back from category to Home
   $('#backBtn').addEventListener('click', () => goto('#/home'));
 
   if (!localStorage.getItem('pv_hint_author_edit_shown')) {
@@ -513,7 +514,7 @@ async function renderReadPiece(id) {
       <div id="readText" class="read-text"></div>
       ${isQuote ? '' : `
         <div class="mem-cta">
-          <button class="btn mem-open" id="memOpenBtn" type="button">Memorise this poem</button>
+          <button class="btn mem-open" id="memOpenBtn" type="button">Memorise</button>
         </div>
       `}
     </div>
@@ -560,7 +561,7 @@ async function renderReadPiece(id) {
   setTimeout(autoScale, 300);
 }
 
-/* ===== Memorise screen ===== */
+/* ===== Separate Memorise screen (poems only) ===== */
 async function renderMemorisePiece(id) {
   const p = await getPiece(id);
   if (!p) return renderHome();
@@ -594,10 +595,11 @@ async function renderMemorisePiece(id) {
         <div id="memDisplay" class="mem-display">
           Choose a mode to begin.
         </div>
-        <div class="mem-buttons">
-          <button class="btn mem-nav" id="memBackBtn" type="button" disabled>Back</button>
-          <button class="btn mem-nav" id="memNextBtn" type="button" disabled>Next</button>
-        </div>
+      </div>
+
+      <div class="mem-buttons">
+        <button class="btn mem-nav" id="memBackBtn" type="button" disabled>Back</button>
+        <button class="btn mem-nav" id="memNextBtn" type="button" disabled>Next</button>
       </div>
     </div>
   `;
@@ -620,60 +622,85 @@ async function renderMemorisePiece(id) {
   const linesBtn = $('#memLinesBtn');
   const wordsBtn = $('#memWordsBtn');
 
-  let mode = null;
+  let mode = null;   // 'lines' | 'words'
   let seq = [];
   let idx = 0;
 
-  function updateDisplay() {
-    if (!seq.length || !mode) {
-      display.textContent = 'Choose a mode to begin.';
-      return;
-    }
-
-    if (idx === 0) {
-      display.textContent = 'Tap "Next" to reveal the first ' + (mode === 'lines' ? 'line.' : 'word.');
-      return;
-    }
-
-    const revealed = seq.slice(0, idx);
-    if (mode === 'lines') {
-      display.textContent = revealed.join('\n');
-    } else {
-      display.textContent = revealed.join(' ');
-    }
+  function setButtonsEnabled(enabled) {
+    nextBtn.disabled = !enabled;
+    backBtn.disabled = !enabled;
   }
 
-  function updateButtons() {
-    nextBtn.disabled = !seq.length || idx >= seq.length;
-    backBtn.disabled = idx === 0;
+  function resetDisplay(message) {
+    display.textContent = message || 'Choose a mode to begin.';
   }
 
   function start(newMode) {
     mode = newMode;
     seq = mode === 'lines' ? lines : words;
     idx = 0;
-    updateDisplay();
-    updateButtons();
+
+    if (!seq.length) {
+      resetDisplay('No text to memorise.');
+      setButtonsEnabled(false);
+      return;
+    }
+
+    resetDisplay('Tap "Next" to reveal the first ' + (mode === 'lines' ? 'line.' : 'word.'));
+    setButtonsEnabled(true);
   }
 
   function showNext() {
-    if (!seq.length || !mode || idx >= seq.length) return;
-    idx++;
-    updateDisplay();
-    updateButtons();
+    if (!seq.length || !mode) return;
+
+    if (idx >= seq.length) {
+      // restart
+      start(mode);
+      return;
+    }
+
+    const unit = seq[idx++];
+    if (mode === 'lines') {
+      display.textContent += (display.textContent ? '\n' : '') + unit;
+    } else {
+      display.textContent += (display.textContent ? ' ' : '') + unit;
+    }
+
+    if (idx >= seq.length) {
+      nextBtn.textContent = 'Restart';
+    } else {
+      nextBtn.textContent = 'Next';
+    }
   }
 
-  function hideBack() {
-    if (idx === 0) return;
-    idx--;
-    updateDisplay();
-    updateButtons();
+  function hideLast() {
+    if (!seq.length || !mode) return;
+    if (!display.textContent) return;
+
+    if (mode === 'lines') {
+      const parts = display.textContent.split('\n');
+      parts.pop();
+      display.textContent = parts.join('\n');
+    } else {
+      const parts = display.textContent.trim().split(/\s+/);
+      parts.pop();
+      display.textContent = parts.join(' ');
+    }
+
+    if (idx > 0) idx--;
+    nextBtn.textContent = 'Next';
   }
 
-  linesBtn.addEventListener('click', () => start('lines'));
-  wordsBtn.addEventListener('click', () => start('words'));
+  linesBtn.addEventListener('click', () => {
+    nextBtn.textContent = 'Next';
+    start('lines');
+  });
+  wordsBtn.addEventListener('click', () => {
+    nextBtn.textContent = 'Next';
+    start('words');
+  });
   nextBtn.addEventListener('click', showNext);
-  backBtn.addEventListener('click', hideBack);
+  backBtn.addEventListener('click', hideLast);
 }
 
 // ---------- Helpers ----------
