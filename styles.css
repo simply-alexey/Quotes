@@ -74,7 +74,7 @@ body{
   border-top:1px solid #d9d9d9;
 }
 
-/* Buttons inside bottom bar (Home / Export / Import) */
+/* Buttons inside bottom bar (Home / Export / Import / Memorise) */
 .bottombar button,
 .bottombar .import-label{
   background:navy;
@@ -92,16 +92,12 @@ body{
 }
 .import-label{ cursor:pointer }
 
-/* ====== REQUIREMENT: Hide Export/Import except on Home ====== */
+/* Hide Export/Import on non-home by default.
+   JS will explicitly show the button again when used as "Memorise" on the verse screen. */
 body:not(.home) #exportBtn,
 body:not(.home) .import-label,
 body:not(.home) #importInput {
-  display:none !important;
-}
-
-/* Center Home button when it's alone */
-body:not(.home) .bottombar {
-  justify-content:center !important;
+  display:none;
 }
 
 /* ===== Home screen buttons ===== */
@@ -187,7 +183,7 @@ body:not(.home) .bottombar {
 
 /* ===== Poem view ===== */
 .read-page{
-  padding:0 7.5px 140px;  /* room for bottom button */
+  padding:0 7.5px 120px;  /* room for bottom bar only */
 }
 
 .read-header{
@@ -215,20 +211,7 @@ body:not(.home) .bottombar {
   overflow-y:hidden;
 }
 
-/* Memorise button (always visible) */
-.mem-cta{
-  position:fixed;
-  left:var(--edge-gap);
-  right:var(--edge-gap);
-  bottom:88px;
-  margin:0;
-  z-index:6;
-}
-.mem-open{
-  width:100%;
-  font-size:1.2rem;
-  padding:14px 16px;
-}
+/* (old floating memorise button styles removed) */
 
 /* ===== Floating + button ===== */
 .fab{
@@ -321,6 +304,15 @@ body:not(.home) .bottombar {
   border-bottom:1px solid #dcdcdc;
 }
 
+.mem-author{
+  font-weight:700;
+  margin:0 0 2px;
+}
+.mem-title{
+  font-weight:600;
+  margin:0 0 6px;
+}
+
 .mem-help{
   margin:10px 2px 8px;
   font-size:.9rem;
@@ -341,7 +333,7 @@ body:not(.home) .bottombar {
   gap:10px;
   margin-bottom:12px;
 }
-.mem-btn{
+.mem-panel .mem-btn{
   flex:1;
   font-size:1.1rem;
   padding:12px 10px;

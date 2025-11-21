@@ -170,6 +170,54 @@ async function importJSON(file) {
   await Promise.all((data.pieces||[]).map(p=>new Promise((res)=>{ tx('pieces','readwrite').add(p).onsuccess=()=>res(); })));
 }
 
+// ---------- Footer helpers ----------
+function configureFooterForHome() {
+  const exportBtn = document.getElementById('exportBtn');
+  const importLabel = document.querySelector('.import-label');
+  if (exportBtn) {
+    exportBtn.textContent = 'Export';
+    exportBtn.style.display = '';
+    exportBtn.onclick = exportJSON;
+  }
+  if (importLabel) {
+    importLabel.style.display = '';
+  }
+}
+
+function configureFooterForNonHome() {
+  const exportBtn = document.getElementById('exportBtn');
+  const importLabel = document.querySelector('.import-label');
+  if (exportBtn) {
+    exportBtn.style.display = 'none';
+    exportBtn.onclick = null;
+  }
+  if (importLabel) {
+    importLabel.style.display = 'none';
+  }
+}
+
+function configureFooterForMemoriseButton(pieceId, isQuote) {
+  const exportBtn = document.getElementById('exportBtn');
+  const importLabel = document.querySelector('.import-label');
+
+  // Import hidden on non-home
+  if (importLabel) {
+    importLabel.style.display = 'none';
+  }
+
+  if (!exportBtn) return;
+
+  if (isQuote) {
+    // Quotes don't use memorise; hide the secondary button
+    exportBtn.style.display = 'none';
+    exportBtn.onclick = null;
+  } else {
+    exportBtn.textContent = 'Memorise';
+    exportBtn.style.display = 'inline-flex';   // override CSS display:none
+    exportBtn.onclick = () => goto(`#/memorise/${pieceId}`);
+  }
+}
+
 // ---------- UI ----------
 const Categories = ['Poems','Quotes'];
 
@@ -193,6 +241,7 @@ function renderHome() {
       ${Categories.map(c=>`<button class="btn" onclick="goto('#/authors/${encodeURIComponent(c)}')">${c}</button>`).join('')}
     </div>
   `;
+  configureFooterForHome();
 }
 
 /* ===== Authors list for category ===== */
@@ -207,6 +256,8 @@ async function renderAuthors(category) {
       <button id="fabAddAuthor" class="fab" aria-label="Add author">+</button>
     </div>
   `;
+
+  configureFooterForNonHome();
 
   // Back from category to Home
   $('#backBtn').addEventListener('click', () => goto('#/home'));
@@ -328,6 +379,8 @@ async function renderPieces(authorId) {
       </div>
     </div>
   `;
+
+  configureFooterForNonHome();
 
   $('#backBtn').addEventListener('click', () => goto(`#/authors/${encodeURIComponent(author.category)}`));
 
@@ -512,22 +565,15 @@ async function renderReadPiece(id) {
         <button class="btn back" id="backBtn">Back</button>
       </div>
       <div id="readText" class="read-text"></div>
-      ${isQuote ? '' : `
-        <div class="mem-cta">
-          <button class="btn mem-open" id="memOpenBtn" type="button">Memorise</button>
-        </div>
-      `}
     </div>
   `;
+
+  configureFooterForMemoriseButton(p.id, isQuote);
 
   $('#backBtn').addEventListener('click', () => goto(`#/pieces/${p.authorId}`));
 
   const readEl = $('#readText');
   readEl.textContent = p.text || '';
-
-  if (!isQuote) {
-    $('#memOpenBtn')?.addEventListener('click', () => goto(`#/memorise/${p.id}`));
-  }
 
   function autoScale() {
     const containerWidth = readEl.getBoundingClientRect().width;
@@ -595,13 +641,16 @@ async function renderMemorisePiece(id) {
         <div id="memDisplay" class="mem-display">
           Choose a mode to begin.
         </div>
-        <div class="mem-buttons">
-          <button class="btn mem-nav" id="memBackBtn" type="button" disabled>Back</button>
-          <button class="btn mem-nav" id="memNextBtn" type="button" disabled>Next</button>
-        </div>
+      </div>
+
+      <div class="mem-buttons">
+        <button class="btn mem-nav" id="memBackBtn" type="button" disabled>Back</button>
+        <button class="btn mem-nav" id="memNextBtn" type="button" disabled>Next</button>
       </div>
     </div>
   `;
+
+  configureFooterForNonHome();
 
   $('#backBtn').addEventListener('click', () => goto(`#/piece/${id}`));
 
@@ -707,11 +756,11 @@ function setupInstallPrompt(){
   });
 }
 
-// Footer actions
+// Footer actions: only Home is global now; Export/Memorise handled per-screen
 document.addEventListener('click', (e)=>{
   if (e.target.id === 'homeBtn') goto('#/home');
-  if (e.target.id === 'exportBtn') exportJSON();
 });
+
 document.getElementById('importInput')?.addEventListener('change', (e)=> {
   const file = e.target.files?.[0]; if (file) importJSON(file);
 });
