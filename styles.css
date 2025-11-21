@@ -4,7 +4,7 @@
   --btn-border:#0b1d6b;
   --btn-text:#000;
   --acc:#0b1d6b;
-  --edge-gap:8px;
+  --edge-gap:8px;   /* ~2 mm gap */
 }
 
 /* Base layout */
@@ -18,7 +18,7 @@ body{
   overflow-x:hidden;
 }
 
-/* Top bar */
+/* Top bar (only on Home) */
 .topbar{
   position:sticky;top:0;z-index:5;
   background:#f8f8f8;border-bottom:1px solid #ddd;
@@ -41,7 +41,7 @@ body{
 .btn.acc{background:#8ee08e;border-color:#4aa24a}
 .btn.danger{background:#ffb3b3;border-color:#bb2e2e}
 
-/* Compact back button size */
+/* Back button smaller */
 .btn.back{
   font-size:1.2em;
   padding:8px 14px;
@@ -62,15 +62,19 @@ body{
   border:2px solid var(--btn-bg);
 }
 
-/* Bottom bar and its buttons */
+/* Bottom bar */
 .bottombar{
   position:fixed;bottom:0;left:0;right:0;
   background:#f2f2f2;
-  display:flex;gap:10px;justify-content:space-between;align-items:center;
-  padding:12px 16px;border-top:1px solid #d9d9d9
+  display:flex;
+  gap:10px;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 16px;
+  border-top:1px solid #d9d9d9;
 }
 
-/* Bottom buttons same size, navy */
+/* Buttons inside bottom bar (Home / Export / Import) */
 .bottombar button,
 .bottombar .import-label{
   background:navy;
@@ -86,9 +90,21 @@ body{
   align-items:center;
   justify-content:center;
 }
-.import-label{cursor:pointer}
+.import-label{ cursor:pointer }
 
-/* ===== Home screen ===== */
+/* ====== REQUIREMENT: Hide Export/Import except on Home ====== */
+body:not(.home) #exportBtn,
+body:not(.home) .import-label,
+body:not(.home) #importInput {
+  display:none !important;
+}
+
+/* Center Home button when it's alone */
+body:not(.home) .bottombar {
+  justify-content:center !important;
+}
+
+/* ===== Home screen buttons ===== */
 .home-categories{
   display:grid; gap:16px;
   padding:16px var(--edge-gap);
@@ -102,7 +118,6 @@ body{
 /* ===== Authors screen ===== */
 .authors-page{ padding:0 var(--edge-gap); }
 
-/* Sticky header for authors & pieces */
 .pieces-header{
   position:sticky;
   top:0;
@@ -110,26 +125,30 @@ body{
   background:var(--bg);
   margin:8px 0 6px;
   padding-top:2px;
-  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
   border-bottom:1px solid #dcdcdc;
 }
 .pieces-header h2{ margin:0 0 8px; }
 
 .authors-grid{
-  display:grid; gap:16px; grid-template-columns:1fr;
+  display:grid; gap:16px;
   padding:8px 0 4px;
 }
 .author-item{ width:100%; }
 .author-btn{
   display:block; width:100%;
   text-align:left;
-  font-size:1.6em; padding:11px 14px;
+  font-size:1.6em;
+  padding:11px 14px;
 }
 
-/* ===== Pieces list page (Poet) ===== */
+/* ===== Pieces list (poems/quotes) ===== */
 .pieces-page{ padding:0 var(--edge-gap); }
 .pieces-grid{
-  display:grid; gap:16px; grid-template-columns:1fr;
+  display:grid; gap:16px;
   padding:8px 0 80px;
 }
 .piece-item{ width:100%; }
@@ -141,11 +160,14 @@ body{
   text-align:left;
 }
 
-/* Inline piece edit and author edit */
+/* Long-press edit boxes */
 .piece-edit,
 .author-edit{
   display:flex; flex-direction:column; gap:12px;
-  background:#f8f9fb; border:1px solid #d9e0ea; border-radius:12px; padding:12px;
+  background:#f8f9fb;
+  border:1px solid #d9e0ea;
+  border-radius:12px;
+  padding:12px;
 }
 .piece-edit .btn,
 .author-edit .btn{
@@ -155,7 +177,6 @@ body{
 }
 .fav-row{ display:inline-flex; gap:8px; align-items:center; font-size:.95rem; }
 
-/* Edit actions row */
 .edit-actions{
   display:flex;
   justify-content:space-between;
@@ -164,46 +185,42 @@ body{
 }
 .edit-actions .row{ gap:8px; }
 
-/* ===== Read (viewer) page ===== */
+/* ===== Poem view ===== */
 .read-page{
-  padding:0 7.5px 140px;  /* extra bottom space so text isn't hidden behind fixed buttons */
+  padding:0 7.5px 140px;  /* room for bottom button */
 }
 
-/* Sticky read header */
 .read-header{
   position:sticky;
   top:0;
   z-index:4;
   background:var(--bg);
   margin:8px 0 6px;
-  display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
   border-bottom:1px solid #dcdcdc;
 }
 .read-author{ font-weight:700; margin:0 0 2px; }
 .read-title { font-weight:600; margin:0 0 6px; }
 
-/* The text block itself */
 .read-text{
-  background:transparent;
-  color:#000;
   padding:12px 0 80px;
   white-space:pre;
   line-height:1.35;
   font-size:20px;
+  color:#000;
   overflow-x:hidden;
   overflow-y:hidden;
-  max-width:100%;
-  width:100%;
-  word-break:normal;
-  overflow-wrap:normal;
 }
 
-/* CTA under poem for memorise mode */
+/* Memorise button (always visible) */
 .mem-cta{
   position:fixed;
   left:var(--edge-gap);
   right:var(--edge-gap);
-  bottom:88px;          /* sits just above the bottom bar */
+  bottom:88px;
   margin:0;
   z-index:6;
 }
@@ -213,7 +230,7 @@ body{
   padding:14px 16px;
 }
 
-/* Floating action button (+) */
+/* ===== Floating + button ===== */
 .fab{
   position:fixed;
   right:20px;
@@ -225,24 +242,33 @@ body{
   color:#fff;
   border:2px solid navy;
   font-size:1.8rem;
-  line-height:1;
-  display:flex; align-items:center; justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   box-shadow:0 6px 16px rgba(0,0,0,.25);
   z-index:10;
 }
 
-/* Modal */
+/* ===== Add dialog modal ===== */
 .modal-backdrop{
-  position:fixed; inset:0; background:rgba(0,0,0,.4);
-  display:flex; align-items:center; justify-content:center; z-index:1000;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
 }
 .modal{
   width:min(92vw,480px);
   height:80vh;
-  background:#fff; color:#000;
-  border-radius:14px; padding:16px;
+  background:#fff;
+  color:#000;
+  border-radius:14px;
+  padding:16px;
   box-shadow:0 12px 28px rgba(0,0,0,.35);
-  display:flex; flex-direction:column; gap:12px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
   overflow:auto;
 }
 .modal-title{ margin:0 0 4px; font-size:1.1rem; }
@@ -250,7 +276,6 @@ body{
 .modal .ta{
   flex:1 1 auto;
   min-height:0;
-  resize:vertical;
 }
 .modal .btn{
   font-size:1rem;
@@ -260,21 +285,27 @@ body{
 
 /* Toast */
 .toast{
-  position:fixed; left:50%; bottom:96px; transform:translateX(-50%) translateY(10px);
-  background:#111; color:#fff; padding:10px 14px; border-radius:12px; font-size:.95rem;
-  opacity:0; transition:opacity .2s ease, transform .2s ease; z-index:9999;
+  position:fixed;
+  left:50%;
+  bottom:96px;
+  transform:translateX(-50%) translateY(10px);
+  background:#111;
+  color:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  font-size:.95rem;
+  opacity:0;
+  transition:opacity .2s, transform .2s;
+  z-index:9999;
 }
-.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-
-/* Utilities */
-.row{display:flex;gap:10px;align-items:center}
-.row.space{justify-content:space-between}
-.muted{opacity:.65}
-.hidden{display:none}
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
 
 /* ===== Memorise screen ===== */
 .mem-page{
-  padding:0 var(--edge-gap) 140px;  /* allows scrolling behind fixed Back/Next buttons */
+  padding:0 var(--edge-gap) 140px;
 }
 
 .mem-header{
@@ -289,14 +320,6 @@ body{
   gap:12px;
   border-bottom:1px solid #dcdcdc;
 }
-.mem-author{
-  font-weight:700;
-  margin:0 0 2px;
-}
-.mem-title{
-  font-weight:600;
-  margin:0 0 6px;
-}
 
 .mem-help{
   margin:10px 2px 8px;
@@ -307,7 +330,7 @@ body{
 .mem-panel{
   margin-top:4px;
   padding:14px;
-  padding-bottom:80px;  /* room under the text so fixed Back/Next don't overlap content */
+  padding-bottom:80px;
   border-radius:12px;
   background:#f8f9fb;
   border:1px solid #d9e0ea;
@@ -318,12 +341,10 @@ body{
   gap:10px;
   margin-bottom:12px;
 }
-
-.mem-panel .mem-btn{
+.mem-btn{
   flex:1;
   font-size:1.1rem;
   padding:12px 10px;
-  min-width:0;
 }
 
 .mem-display{
@@ -338,23 +359,28 @@ body{
   font-size:1rem;
 }
 
+/* Back / Next fixed above bottom bar */
 .mem-buttons{
   position:fixed;
   left:var(--edge-gap);
   right:var(--edge-gap);
-  bottom:88px;      /* just above Home / Export / Import bar */
+  bottom:88px;
   display:flex;
   gap:10px;
   z-index:6;
 }
-
 .mem-nav{
   flex:1;
   font-size:1.1rem;
   padding:12px 10px;
 }
-
 .mem-nav:disabled{
   opacity:0.4;
   cursor:not-allowed;
 }
+
+/* generic utility */
+.row{display:flex;gap:10px;align-items:center}
+.row.space{justify-content:space-between}
+.muted{opacity:.65}
+.hidden{display:none}
