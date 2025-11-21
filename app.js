@@ -629,10 +629,6 @@ async function renderMemorisePiece(id) {
         <button class="btn back" id="backBtn">Back</button>
       </div>
 
-      <p class="mem-help">
-        Choose a mode, try to recall the next line or word, then tap "Next" to reveal it.
-      </p>
-
       <div class="mem-panel">
         <div class="mem-controls">
           <button class="btn mem-btn" id="memLinesBtn" type="button">By lines</button>
