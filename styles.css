@@ -37,6 +37,9 @@ body{
   padding:14px 18px;
   font-size:2.0em;
   display:inline-flex;align-items:center;justify-content:center;
+
+  /* NEW — prevent double-tap zoom behaviour */
+  touch-action: manipulation;
 }
 .btn.acc{background:#8ee08e;border-color:#4aa24a}
 .btn.danger{background:#ffb3b3;border-color:#bb2e2e}
@@ -73,7 +76,6 @@ body{
   border-top:1px solid #d9d9d9;
 }
 
-/* Bottom bar buttons */
 .bottombar button,
 .bottombar .import-label{
   background:navy;
@@ -85,7 +87,11 @@ body{
   width:110px;
   height:44px;
   padding:0;
+
   display:inline-flex;align-items:center;justify-content:center;
+
+  /* NEW — prevent double-tap zoom */
+  touch-action: manipulation;
 }
 .import-label{ cursor:pointer }
 
@@ -111,9 +117,8 @@ body:not(.home) .bottombar{
   width:100%;
 }
 
-/* Authors screen */
+/* Authors */
 .authors-page{ padding:0 var(--edge-gap); }
-
 .pieces-header{
   position:sticky;top:0;z-index:4;
   background:var(--bg);
@@ -130,7 +135,6 @@ body:not(.home) .bottombar{
   padding:8px 0 4px;
 }
 .author-item{ width:100%; }
-
 .author-btn{
   width:100%;text-align:left;
   font-size:1.6em;
@@ -139,7 +143,6 @@ body:not(.home) .bottombar{
 
 /* Pieces list */
 .pieces-page{ padding:0 var(--edge-gap); }
-
 .pieces-grid{
   display:grid;gap:16px;
   padding:8px 0 80px;
@@ -266,9 +269,12 @@ body:not(.home) .bottombar{
   flex:1;
   font-size:1.1rem;
   padding:12px 10px;
+
+  /* NEW: Prevent double-tap zoom here as well */
+  touch-action: manipulation;
 }
 
-/* Scrollable memorise box – Option A */
+/* Scrollable memorise box */
 .mem-display{
   padding:12px 10px;
   background:#fff;
@@ -279,12 +285,11 @@ body:not(.home) .bottombar{
   margin-bottom:12px;
   font-size:1rem;
 
-  /* keep text inside visible area and scroll internally */
-  max-height: calc(100vh - 280px);  /* tweak offset if needed */
+  max-height: calc(100vh - 280px);
   overflow-y:auto;
 }
 
-/* Back / Next fixed above bottom bar */
+/* Navigation buttons */
 .mem-buttons{
   position:fixed;
   left:var(--edge-gap);right:var(--edge-gap);
@@ -296,13 +301,14 @@ body:not(.home) .bottombar{
   flex:1;
   font-size:1.1rem;
   padding:12px 10px;
+  touch-action: manipulation;
 }
 .mem-nav:disabled{
   opacity:.4;
   cursor:not-allowed;
 }
 
-/* Utility rows */
+/* Utility */
 .row{display:flex;gap:10px;align-items:center}
 .row.space{justify-content:space-between}
 .muted{opacity:.65}
