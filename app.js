@@ -36,6 +36,7 @@ function tx(store, mode='readonly') {
 
 async function openDBIfNeeded() { if (!db) await openDB(); }
 
+// ---------- Authors ----------
 async function listAuthors(category, search = '') {
   await openDBIfNeeded();
   return new Promise((resolve) => {
@@ -91,6 +92,7 @@ async function getAuthor(id) {
   });
 }
 
+// ---------- Pieces ----------
 async function listPieces(authorId) {
   await openDBIfNeeded();
   return new Promise((resolve) => {
@@ -200,7 +202,6 @@ function configureFooterForMemoriseButton(pieceId, isQuote) {
   const exportBtn = document.getElementById('exportBtn');
   const importLabel = document.querySelector('.import-label');
 
-  // Import hidden on non-home
   if (importLabel) {
     importLabel.style.display = 'none';
   }
@@ -208,17 +209,16 @@ function configureFooterForMemoriseButton(pieceId, isQuote) {
   if (!exportBtn) return;
 
   if (isQuote) {
-    // Quotes don't use memorise; hide the secondary button
     exportBtn.style.display = 'none';
     exportBtn.onclick = null;
   } else {
     exportBtn.textContent = 'Memorise';
-    exportBtn.style.display = 'inline-flex';   // override CSS display:none
+    exportBtn.style.display = 'inline-flex';
     exportBtn.onclick = () => goto(`#/memorise/${pieceId}`);
   }
 }
 
-// ---------- UI ----------
+// ---------- UI / Router ----------
 const Categories = ['Poems','Quotes'];
 
 function route() {
@@ -244,7 +244,7 @@ function renderHome() {
   configureFooterForHome();
 }
 
-/* ===== Authors list for category ===== */
+/* ===== Authors list ===== */
 async function renderAuthors(category) {
   app.innerHTML = `
     <div class="authors-page">
@@ -258,14 +258,7 @@ async function renderAuthors(category) {
   `;
 
   configureFooterForNonHome();
-
-  // Back from category to Home
   $('#backBtn').addEventListener('click', () => goto('#/home'));
-
-  if (!localStorage.getItem('pv_hint_author_edit_shown')) {
-    showToast('Tip: hold an author to rename or delete', 2800);
-    localStorage.setItem('pv_hint_author_edit_shown', '1');
-  }
 
   const cont = $('#authors');
 
@@ -348,7 +341,7 @@ async function renderAuthors(category) {
   });
 }
 
-/* ===== Pieces screen (Poems/Quotes) ===== */
+/* ===== Pieces (poems/quotes) ===== */
 async function renderPieces(authorId) {
   const author = await getAuthor(authorId);
   if (!author) return renderHome();
@@ -381,7 +374,6 @@ async function renderPieces(authorId) {
   `;
 
   configureFooterForNonHome();
-
   $('#backBtn').addEventListener('click', () => goto(`#/authors/${encodeURIComponent(author.category)}`));
 
   const cont = $('#pieces');
@@ -546,7 +538,7 @@ function addLongPress(el, onLongPress, onShortTap) {
 }
 function getPoint(e){ return { x: e.clientX ?? (e.touches?.[0]?.clientX||0), y: e.clientY ?? (e.touches?.[0]?.clientY||0) }; }
 
-/* ===== Read view (viewer) ===== */
+/* ===== Read view ===== */
 async function renderReadPiece(id) {
   const p = await getPiece(id);
   if (!p) return renderHome();
@@ -677,7 +669,9 @@ async function renderMemorisePiece(id) {
     }
 
     if (idx === 0) {
-      display.textContent = 'Tap "Next" to reveal the first ' + (mode === 'lines' ? 'line.' : 'word.');
+      display.textContent =
+        'Tap "Next" to reveal the first ' +
+        (mode === 'lines' ? 'line.' : 'word.');
       return;
     }
 
@@ -687,6 +681,9 @@ async function renderMemorisePiece(id) {
     } else {
       display.textContent = revealed.join(' ');
     }
+
+    // Option A: always keep the most recent part in view
+    display.scrollTop = display.scrollHeight;
   }
 
   function updateButtons() {
@@ -752,7 +749,7 @@ function setupInstallPrompt(){
   });
 }
 
-// Footer actions: only Home is global now; Export/Memorise handled per-screen
+// Footer actions
 document.addEventListener('click', (e)=>{
   if (e.target.id === 'homeBtn') goto('#/home');
 });
