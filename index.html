@@ -1,38 +1,36 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+
+  <!-- Prevent double-tap and pinch zoom on iOS -->
+  <meta name="viewport"
+        content="width=device-width,
+                 initial-scale=1,
+                 maximum-scale=1,
+                 user-scalable=no">
+
   <title>Pocket Verse</title>
+
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <meta name="theme-color" content="#111111">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-  <header class="topbar">
-    <h1 id="app-title">Pocket Verse</h1>
-    <button id="installBtn" class="hidden">Install</button>
-  </header>
+  <div id="app"></div>
 
-  <main id="app"></main>
+  <div class="bottombar">
+    <button id="homeBtn" onclick="goto('#/home')">Home</button>
 
-  <footer class="bottombar">
-    <button id="homeBtn" title="Home">Home</button>
-    <button id="exportBtn" title="Export JSON">Export</button>
-    <label class="import-label" title="Import JSON">
-      Import <input id="importInput" type="file" accept="application/json" hidden>
-    </label>
-  </footer>
+    <!-- Export button becomes "Memorise" dynamically -->
+    <button id="exportBtn" style="display:none">Export</button>
 
-  <!-- versioned to bust any lingering caches -->
-  <script src="app.js?v=2"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js');
-      });
-    }
-  </script>
+    <!-- Import -->
+    <label for="importInput" class="import-label" style="display:none">Import</label>
+    <input id="importInput" type="file" accept="application/json" style="display:none">
+  </div>
+
+  <script src="app.js"></script>
+  <script src="service-worker.js"></script>
 </body>
 </html>
