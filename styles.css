@@ -441,7 +441,7 @@ body:not(.home) .bottombar{
 
 /* Scrollable memorise box */
 .mem-display{
-  padding:16px 14px;
+  padding:16px 14px 80px 14px; /* Extra bottom padding to prevent hiding behind buttons */
   background:#fafaf9;
   border-radius:10px;
   border:2px dashed var(--border-medium);
