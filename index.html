@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
   <meta charset="UTF-8">
 
   <!-- Prevent double-tap and pinch zoom on iOS -->
@@ -14,7 +14,7 @@
 
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
-</head>
+  </head>
 
 <body>
   <div id="app"></div>
@@ -28,9 +28,16 @@
     <!-- Import -->
     <label for="importInput" class="import-label" style="display:none">Import</label>
     <input id="importInput" type="file" accept="application/json" style="display:none">
-  </div>
+            </div>
 
   <script src="app.js"></script>
-  <script src="service-worker.js"></script>
-</body>
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('Service Worker registered', reg))
+        .catch(err => console.log('Service Worker registration failed', err));
+    }
+  </script>
+  </body>
 </html>
