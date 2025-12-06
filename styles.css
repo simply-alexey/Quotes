@@ -311,7 +311,7 @@ body:not(.home) .bottombar{
   white-space:pre-wrap;  /* Changed from 'pre' to allow text wrapping */
   word-wrap:break-word;  /* Ensure long words wrap */
   line-height:1.5;
-  font-size:20px;
+  font-size:18px !important;  /* Fixed size, override JS auto-scaling */
   color:var(--text-primary);
   overflow-x:hidden;
   font-family:Georgia,'Times New Roman',serif; /* Better for reading poetry */
