@@ -96,7 +96,7 @@ body{
 }
 .btn.back{
   font-size:0.95rem;
-  padding:10px 16px;
+  padding:14px 16px;
   background:transparent;
   color:var(--primary);
   border:2px solid var(--primary);
