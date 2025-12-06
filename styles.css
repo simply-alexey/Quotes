@@ -308,7 +308,8 @@ body:not(.home) .bottombar{
 
 .read-text{
   padding:16px 0 80px;
-  white-space:pre;
+  white-space:pre-wrap;  /* Changed from 'pre' to allow text wrapping */
+  word-wrap:break-word;  /* Ensure long words wrap */
   line-height:1.5;
   font-size:20px;
   color:var(--text-primary);
